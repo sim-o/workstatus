@@ -11,6 +11,7 @@ pub use ::TStatusBar;
 pub use ::NSCallback;
 
 use objc::runtime::Class;
+use objc::msg_send;
 
 use self::cocoa::base::{nil, YES};
 use self::cocoa::appkit::NSStatusBar;
