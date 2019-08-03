@@ -16,10 +16,11 @@ fn main() {
     let child = thread::spawn(move || {
         loop {
             thread::sleep(time::Duration::from_millis(1000));
+            print!(".");
         }
     });
 
     status(tx);
 
-    child.join();
+    child.join().expect("child panicked");
 }
