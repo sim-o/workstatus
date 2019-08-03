@@ -25,6 +25,7 @@ use self::rustnsobject::{NSObj, NSObjTrait, NSObjCallbackTrait};
 use std::sync::mpsc::Sender;
 use std::ptr;
 use std::ffi::CStr;
+use crate::NSCallback;
 
 pub type Object = objc::runtime::Object;
 
@@ -99,6 +100,33 @@ impl OSXStatusBar {
             ));
         }
         bar
+    }
+
+    // TODO: whole API should accept menu option.  this whole thing should
+    // be split out into its own recursive menu-builder trait.  this is
+    // horrible.
+    fn add_item(&mut self, menu: Option<*mut Object>,item: &str, callback: NSCallback, selected: bool) -> *mut Object {
+        unsafe {
+            let txt = NSString::alloc(nil).init_str(item);
+            let quit_key = NSString::alloc(nil).init_str("");
+            let app_menu_item = NSMenuItem::alloc(nil)
+                .initWithTitle_action_keyEquivalent_(txt, self.object.selector(), quit_key);
+            let _: () = msg_send![txt, release];
+            let _: () = msg_send![quit_key, release];
+            self.object.add_callback(app_menu_item, callback);
+            let objc = self.object.take_objc();
+            let _: () = msg_send![app_menu_item, setTarget: objc];
+            if selected {
+                let _: () = msg_send![app_menu_item, setState: 1];
+            }
+            let item: *mut Object = app_menu_item;
+            match menu {
+                Some(menu) => { menu.addItem_(app_menu_item); },
+                None => { self.menu_bar.addItem_(app_menu_item); }
+            }
+            let _: () = msg_send![app_menu_item, release];
+            item
+        }
     }
 
     pub fn run(&mut self, block: bool) {

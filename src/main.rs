@@ -6,6 +6,7 @@ mod macos;
 
 use std::sync::mpsc::Sender;
 use crate::macos::OSXStatusBar;
+use std::process::exit;
 
 pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
 
@@ -22,9 +23,10 @@ fn main() {
     });
 
     let mut status_bar = OSXStatusBar::new(tx);
-    loop {
-        status_bar.run(false);
-        thread::sleep(Duration::from_millis(1000));
-    }
-    child.join().expect("child panicked");
+    let cb: NSCallback = Box::new(move |sender, tx| {
+        exit(0);
+    });
+    let _ = status.add_item(None, "Quit", cb, false);
+
+    status_bar.run(true);
 }
