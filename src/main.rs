@@ -16,15 +16,17 @@ fn main() {
     let (tx, rx) = channel::<String>();
 
     let child = thread::spawn(move || {
-        loop {
-            thread::sleep(Duration::from_millis(1000));
-            println!(".");
+        for msg in rx.iter() {
+            match msg.as_str() {
+                "quit" => exit(0),
+                _ => panic!("unexpected message"),
+            }
         }
     });
 
     let mut status_bar = OSXStatusBar::new(tx);
     let cb: NSCallback = Box::new(move |sender, tx| {
-        exit(0);
+        tx.send("quit".to_string());
     });
     let _ = status_bar.add_item(None, "Quit", cb, false);
 
