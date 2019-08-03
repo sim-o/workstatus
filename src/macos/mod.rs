@@ -5,7 +5,7 @@ extern crate objc_foundation;
 extern crate cocoa;
 
 extern crate fruitbasket;
-use self::fruitbasket::FruitApp;
+use self::fruitbasket::{FruitApp, FruitStopper};
 
 use objc::runtime::Class;
 use objc::*;
@@ -32,6 +32,7 @@ pub type Object = objc::runtime::Object;
 pub struct OSXStatusBar {
     object: NSObj,
     app: FruitApp,
+    stopper: FruitStopper,
     status_bar_item: *mut objc::runtime::Object,
     menu_bar: *mut objc::runtime::Object,
     run_count: u32,
@@ -41,12 +42,13 @@ impl OSXStatusBar {
     pub fn new(tx: Sender<String>) -> OSXStatusBar {
         let mut bar;
         unsafe {
-            let nsapp = FruitApp::new();
-            nsapp.set_activation_policy(fruitbasket::ActivationPolicy::Prohibited);
+            let app = FruitApp::new();
+            app.set_activation_policy(fruitbasket::ActivationPolicy::Prohibited);
             let status_bar = NSStatusBar::systemStatusBar(nil);
 
             bar = OSXStatusBar {
-                app: nsapp,
+                app: app,
+                stopper: app.stopper(),
                 status_bar_item: status_bar.statusItemWithLength_(NSVariableStatusItemLength),
                 menu_bar: NSMenu::new(nil),
                 object: NSObj::alloc(tx),
@@ -127,6 +129,10 @@ impl OSXStatusBar {
             let _: () = msg_send![app_menu_item, release];
             item
         }
+    }
+
+    pub fn stop(&self) {
+        self.stopper.stop();
     }
 
     pub fn run(&mut self, block: bool) {
