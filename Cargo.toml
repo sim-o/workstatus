@@ -1,0 +1,15 @@
+[package]
+name = "cl-worktool"
+version = "0.1.0"
+authors = ["Simon Kerle <s.kerle@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reqwest = "0.9.19"
+percent-encoding = "2.0.0"
+serde = "1.0.98"
+objc = "0.2.6"
+objc-foundation = "0.1.1"
+cocoa = "0.19.0"
