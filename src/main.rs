@@ -16,7 +16,7 @@ fn main() {
     let child = thread::spawn(move || {
         loop {
             thread::sleep(time::Duration::from_millis(1000));
-            print!(".");
+            println!(".");
         }
     });
 
