@@ -30,8 +30,5 @@ fn main() {
     });
     let _ = status_bar.add_item(None, "Quit", cb, false);
 
-    loop {
-        status_bar.run(false);
-        thread::sleep(Duration::from_millis(1000));
-    }
+    status_bar.run(true);
 }
