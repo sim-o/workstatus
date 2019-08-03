@@ -33,4 +33,5 @@ fn main() {
     });
 
     status_bar.run(true);
+    status_bar.app.terminate(0);
 }
