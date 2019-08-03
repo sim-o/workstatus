@@ -105,7 +105,7 @@ impl OSXStatusBar {
     // TODO: whole API should accept menu option.  this whole thing should
     // be split out into its own recursive menu-builder trait.  this is
     // horrible.
-    fn add_item(&mut self, menu: Option<*mut Object>,item: &str, callback: NSCallback, selected: bool) -> *mut Object {
+    pub fn add_item(&mut self, menu: Option<*mut Object>,item: &str, callback: NSCallback, selected: bool) -> *mut Object {
         unsafe {
             let txt = NSString::alloc(nil).init_str(item);
             let quit_key = NSString::alloc(nil).init_str("");

@@ -32,6 +32,4 @@ fn main() {
         status_bar.run(false);
         thread::sleep(Duration::from_millis(1000));
     }
-
-    child.join().expect("child panicked");
 }
