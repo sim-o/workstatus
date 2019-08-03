@@ -34,8 +34,8 @@ pub type NSObj = Box<RustWrapperClass>;
 pub type NSObjc = Id<ObjcSubclass, Shared>;
 
 pub trait NSObjCallbackTrait {
-    fn set_value(&mut self, u64, NSCallback);
-    fn get_value(&self, u64) -> &NSCallback;
+    fn set_value(&mut self, v: u64, cb: NSCallback);
+    fn get_value(&self, v: u64) -> &NSCallback;
 }
 
 impl NSObjCallbackTrait for RustWrapperClass {
@@ -51,7 +51,7 @@ pub trait NSObjTrait {
     fn alloc(tx: Sender<String>) -> NSObj;
     fn selector(&self) -> Sel;
     fn take_objc(&mut self) -> NSObjc;
-    fn add_callback(&mut self, *const Object, NSCallback);
+    fn add_callback(&mut self, v: *const Object, cb: NSCallback);
 }
 
 impl NSObjTrait for NSObj {
