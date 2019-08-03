@@ -20,4 +20,6 @@ fn main() {
     });
 
     status(tx);
+
+    child.join();
 }
