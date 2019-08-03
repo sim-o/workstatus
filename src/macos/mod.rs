@@ -35,7 +35,7 @@ pub struct OSXStatusBar {
     menu_bar: *mut objc::runtime::Object,
 }
 
-fn main() {
+pub fn status(tx: Sender<String>) {
     unsafe {
         let nsapp = FruitApp::new();
         nsapp.set_activation_policy(fruitbasket::ActivationPolicy::Prohibited);
