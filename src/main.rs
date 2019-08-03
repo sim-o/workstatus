@@ -26,7 +26,7 @@ fn main() {
     let child = thread::spawn(move || {
         for msg in rx.iter() {
             match msg.as_str() {
-                "quit" => exit(0),
+                "quit" => stopper.stop(),
                 _ => panic!("unexpected message"),
             }
         }
