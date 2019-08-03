@@ -41,7 +41,7 @@ pub fn status(tx: Sender<String>) {
         nsapp.set_activation_policy(fruitbasket::ActivationPolicy::Prohibited);
         let status_bar = NSStatusBar::systemStatusBar(nil);
 
-        let bar = OSXStatusBar {
+        let mut bar = OSXStatusBar {
             app: nsapp,
             status_bar_item: status_bar.statusItemWithLength_(NSVariableStatusItemLength),
             menu_bar: NSMenu::new(nil),
