@@ -104,7 +104,8 @@ impl OSXStatusBar {
     pub fn run(&mut self, block: bool) {
         self.run_count += 1;
         unsafe {
-            let title = NSString::alloc(nil).init_str(format!("connectr {:}", self.run_count);
+            let title: &str = format!("connectr {:}", self.run_count).as_str();
+            let title = NSString::alloc(nil).init_str(title: &str;
             NSButton::setTitle_(bar.status_bar_item, title);
             let _: () = msg_send![title, release];
         }
