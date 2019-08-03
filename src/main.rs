@@ -28,5 +28,10 @@ fn main() {
     });
     let _ = status.add_item(None, "Quit", cb, false);
 
-    status_bar.run(true);
+    loop {
+        status_bar.run(false);
+        thread::sleep(Duration::from_millis(1000));
+    }
+
+    child.join().expect("child panicked");
 }
