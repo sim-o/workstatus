@@ -21,17 +21,24 @@ fn main() {
     });
     let _ = status_bar.add_item(None, "Quit", cb, false);
 
-    let stopper = status_bar.app.stopper();
-
     let child = thread::spawn(move || {
         for msg in rx.iter() {
             match msg.as_str() {
-                "quit" => stopper.stop(),
+                "quit" => exit(0),
                 _ => panic!("unexpected message"),
             }
         }
     });
 
-    status_bar.run(true);
-    status_bar.app.terminate(0);
+    let stopper = status_bar.app.stopper();
+    let worker = thread::spawn(move || {
+        loop {
+            stopper.stop();
+            thread::sleep(Duration::from_millis(1000));
+        }
+    });
+
+    loop {
+        status_bar.run(true);
+    }
 }
