@@ -33,6 +33,7 @@ pub struct OSXStatusBar {
     app: FruitApp,
     status_bar_item: *mut objc::runtime::Object,
     menu_bar: *mut objc::runtime::Object,
+    run_count: u32,
 }
 
 impl OSXStatusBar {
@@ -48,6 +49,7 @@ impl OSXStatusBar {
                 status_bar_item: status_bar.statusItemWithLength_(NSVariableStatusItemLength),
                 menu_bar: NSMenu::new(nil),
                 object: NSObj::alloc(tx),
+                run_count: 0,
             };
 
             // Default mode for menu bar items: blue highlight when selected
@@ -100,6 +102,13 @@ impl OSXStatusBar {
     }
 
     pub fn run(&mut self, block: bool) {
+        self.run_count += 1;
+        unsafe {
+            let title = NSString::alloc(nil).init_str(format!("connectr {:}", self.run_count);
+            NSButton::setTitle_(bar.status_bar_item, title);
+            let _: () = msg_send![title, release];
+        }
+
         let period = match block {
             true => fruitbasket::RunPeriod::Forever,
             _ => fruitbasket::RunPeriod::Once,
