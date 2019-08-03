@@ -10,6 +10,8 @@ edition = "2018"
 reqwest = "0.9.19"
 percent-encoding = "2.0.0"
 serde = "1.0.98"
+
 objc = "0.2.6"
 objc-foundation = "0.1.1"
 cocoa = "0.19.0"
+fruitbasket = "0.8.0"
