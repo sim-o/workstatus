@@ -1,11 +1,12 @@
 use std::sync::mpsc::channel;
-use crate::macos::{status};
 use std::{thread, time};
 
 mod gitlab;
 mod macos;
 
 use std::sync::mpsc::Sender;
+use crate::macos::OSXStatusBar;
+
 pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
 
 fn main() {
@@ -20,7 +21,9 @@ fn main() {
         }
     });
 
-    status(tx);
-
+    let mut status_bar = OSXStatusBar::new(tx);
+    loop {
+        status_bar.run(false);
+    }
     child.join().expect("child panicked");
 }
