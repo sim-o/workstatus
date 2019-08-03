@@ -7,8 +7,6 @@ extern crate cocoa;
 extern crate fruitbasket;
 use self::fruitbasket::FruitApp;
 
-pub use ::TStatusBar;
-
 use objc::runtime::Class;
 use objc::msg_send;
 
