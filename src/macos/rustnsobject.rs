@@ -138,7 +138,7 @@ impl INSObject for ObjcSubclass {
             }
 
             extern fn objc_url(_this: &Object, _cmd: Sel, _event: u64, _reply: u64) {
-                info!("connectr URL support not implemented yet.");
+                println!("connectr URL support not implemented yet.");
             }
 
             unsafe {
