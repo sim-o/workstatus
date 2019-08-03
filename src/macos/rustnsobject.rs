@@ -11,7 +11,7 @@ use std::sync::{Once, ONCE_INIT};
 use objc::Message;
 use objc::declare::ClassDecl;
 use objc::runtime::{Class, Object, Sel};
-use objc::msg_send;
+use objc::*;
 use self::objc_foundation::{INSObject, NSObject};
 
 use std::collections::BTreeMap;
