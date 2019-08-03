@@ -21,17 +21,16 @@ fn main() {
     });
     let _ = status_bar.add_item(None, "Quit", cb, false);
 
-    let stopper = status_bar.stopper();
+    let stopper = status_bar.app.stopper();
+
     let child = thread::spawn(move || {
         for msg in rx.iter() {
             match msg.as_str() {
-                "quit" => stopper.stop(),
+                "quit" => exit(0),
                 _ => panic!("unexpected message"),
             }
         }
     });
 
-    loop {
-        status_bar.run(true);
-    }
+    status_bar.run(true);
 }

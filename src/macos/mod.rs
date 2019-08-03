@@ -31,7 +31,7 @@ pub type Object = objc::runtime::Object;
 
 pub struct OSXStatusBar {
     object: NSObj,
-    app: FruitApp,
+    pub app: FruitApp,
     stopper: FruitStopper,
     status_bar_item: *mut objc::runtime::Object,
     menu_bar: *mut objc::runtime::Object,
@@ -129,10 +129,6 @@ impl OSXStatusBar {
             let _: () = msg_send![app_menu_item, release];
             item
         }
-    }
-
-    pub fn stopper(&self) -> &FruitStopper {
-        &self.stopper
     }
 
     pub fn run(&mut self, block: bool) {
