@@ -104,6 +104,7 @@ impl OSXStatusBar {
             true => fruitbasket::RunPeriod::Forever,
             _ => fruitbasket::RunPeriod::Once,
         };
+
         let _ = self.app.run(period);
     }
 }

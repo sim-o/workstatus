@@ -1,5 +1,5 @@
 use std::sync::mpsc::channel;
-use std::{thread, time};
+use std::{thread, time::Duration};
 
 mod gitlab;
 mod macos;
@@ -16,7 +16,7 @@ fn main() {
 
     let child = thread::spawn(move || {
         loop {
-            thread::sleep(time::Duration::from_millis(1000));
+            thread::sleep(Duration::from_millis(1000));
             println!(".");
         }
     });
@@ -24,6 +24,7 @@ fn main() {
     let mut status_bar = OSXStatusBar::new(tx);
     loop {
         status_bar.run(false);
+        thread::sleep(Duration::from_millis(1000));
     }
     child.join().expect("child panicked");
 }
