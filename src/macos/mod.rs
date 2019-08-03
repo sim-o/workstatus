@@ -106,7 +106,7 @@ impl OSXStatusBar {
         unsafe {
             let title: &str = format!("connectr {:}", self.run_count).as_str();
             let title = NSString::alloc(nil).init_str(title);
-            NSButton::setTitle_(bar.status_bar_item, title);
+            NSButton::setTitle_(self.status_bar_item, title);
             let _: () = msg_send![title, release];
         }
 
