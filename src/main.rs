@@ -4,6 +4,9 @@ use crate::macos::OSXStatusBar;
 mod gitlab;
 mod macos;
 
+use std::sync::mpsc::Sender;
+pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
+
 fn main() {
     println!("merge requests: {:?}", gitlab::merge_request_count().unwrap());
 

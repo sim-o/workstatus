@@ -6,9 +6,6 @@ extern crate objc;
 extern crate objc_foundation;
 extern crate objc_id;
 
-use std::sync::mpsc::Sender;
-pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
-
 use std::sync::{Once, ONCE_INIT};
 
 use objc::Message;
@@ -23,6 +20,8 @@ use self::objc_id::WeakId;
 use self::objc_id::Shared;
 
 use std::sync::mpsc::Sender;
+
+use crate::NSCallback;
 
 pub struct RustWrapperClass {
     pub objc: Id<ObjcSubclass, Shared>,
