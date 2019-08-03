@@ -26,7 +26,7 @@ fn main() {
     let cb: NSCallback = Box::new(move |sender, tx| {
         exit(0);
     });
-    let _ = status.add_item(None, "Quit", cb, false);
+    let _ = status_bar.add_item(None, "Quit", cb, false);
 
     loop {
         status_bar.run(false);
