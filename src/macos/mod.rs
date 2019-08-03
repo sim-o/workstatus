@@ -32,7 +32,6 @@ pub type Object = objc::runtime::Object;
 pub struct OSXStatusBar {
     object: NSObj,
     pub app: FruitApp,
-    stopper: FruitStopper,
     status_bar_item: *mut objc::runtime::Object,
     menu_bar: *mut objc::runtime::Object,
     run_count: u32,
@@ -47,8 +46,7 @@ impl OSXStatusBar {
             let status_bar = NSStatusBar::systemStatusBar(nil);
 
             bar = OSXStatusBar {
-                app: app,
-                stopper: app.stopper(),
+                app,
                 status_bar_item: status_bar.statusItemWithLength_(NSVariableStatusItemLength),
                 menu_bar: NSMenu::new(nil),
                 object: NSObj::alloc(tx),
