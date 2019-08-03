@@ -8,7 +8,6 @@ extern crate fruitbasket;
 use self::fruitbasket::FruitApp;
 
 pub use ::TStatusBar;
-pub use ::NSCallback;
 
 use objc::runtime::Class;
 use objc::msg_send;
@@ -30,6 +29,9 @@ use std::ptr;
 use std::ffi::CStr;
 
 pub type Object = objc::runtime::Object;
+
+use std::sync::mpsc::Sender;
+pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
 
 pub struct OSXStatusBar {
     object: NSObj,

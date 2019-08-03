@@ -6,7 +6,8 @@ extern crate objc;
 extern crate objc_foundation;
 extern crate objc_id;
 
-pub use ::NSCallback;
+use std::sync::mpsc::Sender;
+pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
 
 use std::sync::{Once, ONCE_INIT};
 
