@@ -8,7 +8,7 @@ extern crate fruitbasket;
 use self::fruitbasket::FruitApp;
 
 use objc::runtime::Class;
-use objc::msg_send;
+use objc::{msg_send, sel};
 
 use self::cocoa::base::{nil, YES};
 use self::cocoa::appkit::NSStatusBar;
