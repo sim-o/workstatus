@@ -131,8 +131,8 @@ impl OSXStatusBar {
         }
     }
 
-    pub fn stop(&self) {
-        self.stopper.stop();
+    pub fn stopper(&self) -> FruitStopper {
+        self.stopper
     }
 
     pub fn run(&mut self, block: bool) {
