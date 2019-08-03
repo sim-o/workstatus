@@ -21,10 +21,11 @@ fn main() {
     });
     let _ = status_bar.add_item(None, "Quit", cb, false);
 
+    let stopper = status_bar.stopper();
     let child = thread::spawn(move || {
         for msg in rx.iter() {
             match msg.as_str() {
-                "quit" => status_bar.stopper().stop(),
+                "quit" => stopper.stop(),
                 _ => panic!("unexpected message"),
             }
         }
