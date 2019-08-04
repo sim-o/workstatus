@@ -49,18 +49,18 @@ fn main() {
                     .map(|i| format!("{:}", i))
                     .unwrap_or("⨳".to_string());
 
-                let master_status = gl.pipeline_status("master")
-                    .unwrap_or(PipelineStatus::Success);
-                let status_char = match master_status {
-                    PipelineStatus::Running => "🏃",
-                    PipelineStatus::Pending => "🕗",
-                    PipelineStatus::Success => "👍",
-                    PipelineStatus::Failed => "💩",
-                    PipelineStatus::Canceled => "⏹",
-                    PipelineStatus::Skipped => "⦳",
-                };
+                let status = gl.pipeline_status("master")
+                    .map(|master_status| match master_status {
+                        PipelineStatus::Running => "🏃",
+                        PipelineStatus::Pending => "🕗",
+                        PipelineStatus::Success => "👍",
+                        PipelineStatus::Failed => "💩",
+                        PipelineStatus::Canceled => "⏹",
+                        PipelineStatus::Skipped => "⦳",
+                    })
+                    .unwrap_or("?");
 
-                tx.send(format!("{:}: M:{:} A:{:}", config.project_name, status_char, requires_merge));
+                tx.send(format!("{:}: M:{:} A:{:}", config.project_name, status, requires_merge));
                 stopper.stop();
                 thread::sleep(Duration::from_millis(60_000));
             }
