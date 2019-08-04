@@ -3,17 +3,13 @@ extern crate fruitbasket;
 extern crate objc;
 extern crate objc_foundation;
 
-use std::ffi::CStr;
-use std::ptr;
 use std::sync::mpsc::Sender;
 
 use objc::*;
-use objc::runtime::Class;
 
 use crate::NSCallback;
 
 use self::cocoa::appkit::{NSButton,
-                          NSImage,
                           NSMenu,
                           NSMenuItem,
                           NSStatusItem,

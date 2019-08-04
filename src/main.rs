@@ -41,7 +41,7 @@ fn main() {
     let stopper = status_bar.stopper();
     let project_name = config.project_name.as_str();
     let ignore_users = config.ignore_users;
-    let worker = thread::spawn(move || {
+    thread::spawn(move || {
         loop {
             if let Ok(result) = gl.merge_request_count(ignore_users) {
                 tx.send(format!("{:}: {:}", project_name, result));
