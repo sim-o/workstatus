@@ -34,7 +34,7 @@ struct MergeRequestApproval {
     user_has_approved: bool,
 }
 
-#[derive(Deserialize, Debug, Copy)]
+#[derive(Deserialize, Debug, Copy, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum PipelineStatus {
     Running, Pending, Success, Failed, Canceled, Skipped,
