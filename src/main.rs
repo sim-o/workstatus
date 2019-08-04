@@ -30,7 +30,7 @@ fn main() {
         }
     });
 
-    let stopper = status_bar.app.stopper();
+    let stopper = status_bar.stopper();
     let worker = thread::spawn(move || {
         loop {
             stopper.stop();

@@ -30,7 +30,7 @@ pub type Object = objc::runtime::Object;
 
 pub struct OSXStatusBar {
     object: NSObj,
-    pub app: FruitApp,
+    app: FruitApp,
     status_bar_item: *mut objc::runtime::Object,
     menu_bar: *mut objc::runtime::Object,
     run_count: u32,
@@ -69,6 +69,10 @@ impl OSXStatusBar {
             ));
         }
         bar
+    }
+
+    pub fn stopper(&self) -> FruitStopper {
+        self.app.stopper()
     }
 
     // TODO: whole API should accept menu option.  this whole thing should
