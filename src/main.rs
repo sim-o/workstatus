@@ -60,7 +60,7 @@ fn main() {
                     })
                     .unwrap_or("?");
 
-                tx.send(format!("{:}: M:{:} A:{:}", config.project_name, status, requires_merge));
+                tx.send(format!("{:} {:} {:}", config.project_name, status, requires_merge));
                 stopper.stop();
                 thread::sleep(Duration::from_millis(60_000));
             }

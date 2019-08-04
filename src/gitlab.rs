@@ -49,6 +49,12 @@ struct Pipeline {
     username: String,
 }
 
+#[derive(Deserialize, Debug)]
+struct PipelineDetail {
+    id: i32,
+    before_sha: String,
+}
+
 pub struct Gitlab<'a> {
     client: reqwest::Client,
     host: &'a str,
@@ -107,10 +113,16 @@ impl<'a> Gitlab<'a> {
         let project_id = self.get_project_id()?;
 
         let pipelines: Vec<Pipeline> = self.get(&format!(
-            "/api/v4/projects/{:}/pipelines?ref={:}&per_page=1",
+            "/api/v4/projects/{:}/pipelines?ref={:}&per_page=100",
             project_id, ref_name))?;
 
         let status = pipelines.get(0)
+            .filter(|p| {
+                let url = format!("/api/v4/projects/{:}/pipelines/{:}", project_id, p.id);
+                let det: Option<PipelineDetail> = self.get(&url).ok();
+                det.map(|d| !d.before_sha.trim_matches('0').is_empty())
+                    .unwrap_or(false)
+            })
             .map(|p| p.status)
             .unwrap_or(Success);
 
