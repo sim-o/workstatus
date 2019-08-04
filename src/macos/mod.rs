@@ -102,15 +102,15 @@ impl OSXStatusBar {
         }
     }
 
-    pub fn run(&mut self, block: bool) {
-        self.run_count += 1;
+    pub fn update_title(&self, title: &str) {
         unsafe {
-            let title = format!("connectr {:}", self.run_count);
-            let title = NSString::alloc(nil).init_str(title.as_str());
+            let title = NSString::alloc(nil).init_str(title);
             NSButton::setTitle_(self.status_bar_item, title);
             let _: () = msg_send![title, release];
         }
+    }
 
+    pub fn run(&mut self, block: bool) {
         let period = match block {
             true => fruitbasket::RunPeriod::Forever,
             _ => fruitbasket::RunPeriod::Once,

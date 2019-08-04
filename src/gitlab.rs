@@ -82,7 +82,7 @@ impl<'a> Gitlab<'a> {
                 let project_id = project.id;
                 self.project = Some(project);
                 project_id
-            }
+            },
         };
         Ok(project_id)
     }

@@ -19,7 +19,6 @@ fn main() {
         config.gitlab_url.as_str(),
         config.token.as_str(),
         config.project_name.as_str());
-    println!("merge requests: {:?}", gl.merge_request_count(config.ignore_users).unwrap());
 
     let (tx, rx) = channel::<String>();
 
@@ -29,7 +28,7 @@ fn main() {
     });
     let _ = status_bar.add_item(None, "Quit", cb, false);
 
-    let child = thread::spawn(move || {
+    let message_handler = thread::spawn(move || {
         for msg in rx.iter() {
             match msg.as_str() {
                 "quit" => exit(0),
@@ -38,11 +37,16 @@ fn main() {
         }
     });
 
+    let (tx, rx) = channel::<String>();
     let stopper = status_bar.stopper();
+    let project_name = config.project_name;
     let worker = thread::spawn(move || {
         loop {
-            stopper.stop();
-            thread::sleep(Duration::from_millis(1000));
+            if let Ok(result) = gl.merge_request_count(config.ignore_users) {
+                tx.send(format!("{:}: {:}", project_name, result);
+                stopper.stop();
+            }
+            thread::sleep(Duration::from_millis(60_000));
         }
     });
 
