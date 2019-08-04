@@ -74,15 +74,16 @@ impl<'a> Gitlab<'a> {
     }
 
     fn get_project_id(&mut self) -> Result<u32, Error> {
-        let project = match self.project {
-            Some(project) => project,
+        let project_id = match self.project {
+            Some(project) => project.id,
             None => {
                 let project_name = utf8_percent_encode(, &NON_ALPHANUMERIC).to_string();
                 let project: Project = self.get(format!("/api/v4/projects/{:}", project_name))?;
+                let project_id = project.id;
                 self.project = &Some(project);
-                &project
+                project_id
             }
         };
-        Ok(project.id)
+        Ok(project_id)
     }
 }
