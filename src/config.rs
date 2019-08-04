@@ -5,6 +5,7 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Read;
 
+#[derive(Deserialize, Debug)]
 pub struct Config {
     pub gitlab_url: String,
     pub token: String,
