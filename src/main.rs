@@ -39,7 +39,7 @@ fn main() {
 
     let (tx, rx) = channel::<String>();
     let stopper = status_bar.stopper();
-    let project_name = config.project_name;
+    let project_name = config.project_name.as_str();
     let ignore_users = config.ignore_users;
     let worker = thread::spawn(move || {
         loop {
