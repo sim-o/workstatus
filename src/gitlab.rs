@@ -120,6 +120,7 @@ impl<'a> Gitlab<'a> {
             .filter(|p| {
                 let url = format!("/api/v4/projects/{:}/pipelines/{:}", project_id, p.id);
                 let det: Option<PipelineDetail> = self.get(&url).ok();
+                println!("detail: {:?}", det);
                 det.map(|d| !d.before_sha.trim_matches('0').is_empty())
                     .unwrap_or(false)
             })
