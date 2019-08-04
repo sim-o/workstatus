@@ -46,8 +46,8 @@ fn main() {
 
             loop {
                 let result = gl.merge_request_count(&config.ignore_users)
-                    .map(|i| format!("{:}", i).as_str())
-                    .unwrap_or("⨳");
+                    .map(|i| format!("{:}", i))
+                    .unwrap_or("⨳".to_string());
                 tx.send(format!("{:}: {:}", config.project_name, result));
                 stopper.stop();
                 thread::sleep(Duration::from_millis(60_000));
