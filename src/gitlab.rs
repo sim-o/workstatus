@@ -38,7 +38,7 @@ pub struct Gitlab<'a> {
     host: &'a str,
     token: &'a str,
     project_name: &'a str,
-    project: &'a Option<Project>,
+    project: Option<Project>,
 }
 
 impl<'a> Gitlab<'a> {
@@ -80,7 +80,7 @@ impl<'a> Gitlab<'a> {
             None => {
                 let project_name = utf8_percent_encode(, &NON_ALPHANUMERIC).to_string();
                 let project: Project = self.get(format!("/api/v4/projects/{:}", project_name))?;
-                self.project = &Some(project);
+                self.project = Some(project);
                 project
             }
         };
