@@ -7,7 +7,7 @@ use std::io::Read;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
-pub struct Config<'a> {
+pub struct Config {
     pub gitlab_url: String,
     pub token: String,
     pub project_name: String,
