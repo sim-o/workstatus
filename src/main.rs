@@ -44,7 +44,7 @@ fn main() {
 
             let ignore_users = config.ignore_users;
             loop {
-                if let Ok(result) = gl.merge_request_count(ignore_users) {
+                if let Ok(result) = gl.merge_request_count(ignore_users.clone()) {
                     tx.send(format!("{:}: {:}", config.project_name, result));
                     stopper.stop();
                 }
