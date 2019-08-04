@@ -28,7 +28,7 @@ fn main() {
     });
     let _ = status_bar.add_item(None, "Quit", cb, false);
 
-    let message_handler = thread::spawn(move || {
+    thread::spawn(move || {
         for msg in rx.iter() {
             match msg.as_str() {
                 "quit" => exit(0),
