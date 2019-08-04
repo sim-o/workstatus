@@ -43,7 +43,7 @@ fn main() {
     let worker = thread::spawn(move || {
         loop {
             if let Ok(result) = gl.merge_request_count(config.ignore_users) {
-                tx.send(format!("{:}: {:}", project_name, result);
+                tx.send(format!("{:}: {:}", project_name, result));
                 stopper.stop();
             }
             thread::sleep(Duration::from_millis(60_000));
