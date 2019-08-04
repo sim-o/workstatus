@@ -8,7 +8,7 @@ use serde::de::DeserializeOwned;
 use r::Error;
 
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Copy)]
 struct Project {
     id: u32,
 }
@@ -38,7 +38,7 @@ pub struct Gitlab<'a> {
     host: &'a str,
     token: &'a str,
     project_name: &'a str,
-    project: &'a Option<Project>,
+    project: Option<Project>,
 }
 
 impl<'a> Gitlab<'a> {
@@ -80,7 +80,7 @@ impl<'a> Gitlab<'a> {
                 let project_name = utf8_percent_encode(, &NON_ALPHANUMERIC).to_string();
                 let project: Project = self.get(format!("/api/v4/projects/{:}", project_name))?;
                 let project_id = project.id;
-                self.project = &Some(project);
+                self.project = Some(project);
                 project_id
             }
         };
