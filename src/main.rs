@@ -39,10 +39,11 @@ fn main() {
 
     let (tx, rx) = channel::<String>();
     let stopper = status_bar.stopper();
-    let project_name = config.project_name.clone();
+    let project_name = config.project_name;
+    let ignore_users = config.ignore_users;
     let worker = thread::spawn(move || {
         loop {
-            if let Ok(result) = gl.merge_request_count(config.ignore_users) {
+            if let Ok(result) = gl.merge_request_count(ignore_users) {
                 tx.send(format!("{:}: {:}", project_name, result));
                 stopper.stop();
             }
