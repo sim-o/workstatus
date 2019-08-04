@@ -60,7 +60,7 @@ impl<'a> Gitlab<'a> {
     }
 
     pub fn merge_request_count(&mut self, ignore_authors: Vec<String>) -> Result<usize, Error> {
-        let project = self.get_project();
+        let project = self.get_project()?;
 
         let merge_requests: Vec<MergeRequest> = self.get(format!("/api/v4/projects/{:}/merge_requests?state=opened&per_page=100", project.id))?;
 
