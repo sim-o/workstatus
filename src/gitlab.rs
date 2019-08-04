@@ -115,7 +115,7 @@ impl<'a> Gitlab<'a> {
             "/api/v4/projects/{:}/pipelines?ref={:}&per_page=100",
             project_id, ref_name))?;
 
-        let status = pipelines
+        let status = pipelines.iter()
             // exclude scheduled jobs
             .filter(|p| {
                 let url = format!("/api/v4/projects/{:}/pipelines/{:}", project_id, p.id);
