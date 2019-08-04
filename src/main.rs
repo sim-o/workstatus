@@ -61,7 +61,7 @@ fn main() {
     loop {
         status_bar.run(true);
         if let Ok(title) = rx.try_recv() {
-            status_bar.set_title(title);
+            status_bar.set_title(title.as_str());
         }
     }
 }
