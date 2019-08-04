@@ -75,7 +75,7 @@ impl<'a> Gitlab<'a> {
     }
 
     fn get_project(&mut self) -> Project {
-        let project = match gitlab.project {
+        let project = match self.project {
             Some(project) => project,
             None => {
                 let project_name = utf8_percent_encode(, &NON_ALPHANUMERIC).to_string();
