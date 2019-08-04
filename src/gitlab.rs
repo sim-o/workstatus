@@ -6,6 +6,7 @@ use percent_encoding::{NON_ALPHANUMERIC, utf8_percent_encode};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use r::Error;
+use crate::gitlab::PipelineStatus::Success;
 
 
 #[derive(Deserialize, Debug, Copy, Clone)]
@@ -33,6 +34,21 @@ struct MergeRequestApproval {
     user_has_approved: bool,
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum PipelineStatus {
+    Running, Pending, Success, Failed, Canceled, Skipped,
+}
+
+#[derive(Deserialize, Debug)]
+struct Pipeline {
+    id: i32,
+    status: PipelineStatus,
+    #[serde(rename = "ref")]
+    ref_name: String,
+    username: String,
+}
+
 pub struct Gitlab<'a> {
     client: reqwest::Client,
     host: &'a str,
@@ -52,25 +68,11 @@ impl<'a> Gitlab<'a> {
         }
     }
 
-    fn get<T: DeserializeOwned>(&self, path: String) -> Result<T, Error> {
+    fn get<T: DeserializeOwned>(&self, path: &String) -> Result<T, Error> {
         self.client.get(format!("{:}{:}", self.host, path).as_str())
             .header("Private-Token", self.token)
             .send()?
             .json()
-    }
-
-    pub fn merge_request_count(&mut self, ignore_authors: &Vec<String>) -> Result<usize, Error> {
-        let project_id = self.get_project_id()?;
-        let merge_requests: Vec<MergeRequest> = self.get(format!("/api/v4/projects/{:}/merge_requests?state=opened&per_page=100", project_id))?;
-
-        let approvals = merge_requests.iter()
-            .filter(|mr| !ignore_authors.contains(&mr.author.username))
-            .map(|mr| self.get::<MergeRequestApproval>(format!("/api/v4/projects/{:}/merge_requests/{:}/approvals", project_id, mr.iid)))
-            .filter_map(|mra| mra.ok())
-            .filter(|mra| mra.approvals_left > 0 && mra.user_can_approve && !mra.user_has_approved)
-            .count();
-
-        Ok(approvals)
     }
 
     fn get_project_id(&mut self) -> Result<u32, Error> {
@@ -78,12 +80,40 @@ impl<'a> Gitlab<'a> {
             Some(project) => project.id,
             None => {
                 let project_name = utf8_percent_encode(, &NON_ALPHANUMERIC).to_string();
-                let project: Project = self.get(format!("/api/v4/projects/{:}", project_name))?;
+                let project: Project = self.get(&format!("/api/v4/projects/{:}", project_name))?;
                 let project_id = project.id;
                 self.project = Some(project);
                 project_id
             },
         };
         Ok(project_id)
+    }
+
+    pub fn merge_request_count(&mut self, ignore_authors: &Vec<String>) -> Result<usize, Error> {
+        let project_id = self.get_project_id()?;
+        let merge_requests: Vec<MergeRequest> = self.get(&format!("/api/v4/projects/{:}/merge_requests?state=opened&per_page=100", project_id))?;
+
+        let approvals = merge_requests.iter()
+            .filter(|mr| !ignore_authors.contains(&mr.author.username))
+            .map(|mr| self.get::<MergeRequestApproval>(&format!("/api/v4/projects/{:}/merge_requests/{:}/approvals", project_id, mr.iid)))
+            .filter_map(|mra| mra.ok())
+            .filter(|mra| mra.approvals_left > 0 && mra.user_can_approve && !mra.user_has_approved)
+            .count();
+
+        Ok(approvals)
+    }
+
+    pub fn pipeline_status(&mut self, ref_name: &str) -> Result<PipelineStatus, Error> {
+        let project_id = self.get_project_id()?;
+
+        let pipelines: Vec<Pipeline> = self.get(&format!(
+            "/api/v4/projects/{:}/pipelines?ref={:}&per_page=1",
+            project_id, ref_name));
+
+        let status = pipelines.get(0)
+            .map(|p| p.status)
+            .unwrap_or(Success);
+
+        Ok(status)
     }
 }

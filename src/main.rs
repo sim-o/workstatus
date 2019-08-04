@@ -9,7 +9,7 @@ use std::sync::mpsc::Sender;
 use crate::macos::OSXStatusBar;
 use std::process::exit;
 use crate::config::read_config;
-use crate::gitlab::Gitlab;
+use crate::gitlab::{Gitlab, PipelineStatus};
 
 pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
 
@@ -45,10 +45,22 @@ fn main() {
                 config.project_name.as_str());
 
             loop {
-                let result = gl.merge_request_count(&config.ignore_users)
+                let requires_merge = gl.merge_request_count(&config.ignore_users)
                     .map(|i| format!("{:}", i))
                     .unwrap_or("⨳".to_string());
-                tx.send(format!("{:}: {:}", config.project_name, result));
+
+                let master_status = gl.pipeline_status("master")
+                    .unwrap_or(Success);
+                let status_char = match master_status {
+                    PipelineStatus::Running => "🏃",
+                    PipelineStatus::Pending => "🕗",
+                    PipelineStatus::Success => "👍",
+                    PipelineStatus::Failed => "💩",
+                    PipelineStatus::Canceled => "⏹",
+                    PipelineStatus::Skipped => "⦳",
+                };
+
+                tx.send(format!("{:}: M:{:} A:{:}", config.project_name, requires_merge));
                 stopper.stop();
                 thread::sleep(Duration::from_millis(60_000));
             }
