@@ -81,7 +81,7 @@ impl<'a> Gitlab<'a> {
                 let project_name = utf8_percent_encode(, &NON_ALPHANUMERIC).to_string();
                 let project: Project = self.get(format!("/api/v4/projects/{:}", project_name))?;
                 self.project = &Some(project);
-                project
+                &project
             }
         };
         Ok(project)
