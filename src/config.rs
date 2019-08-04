@@ -14,7 +14,7 @@ pub struct Config<'a> {
     pub ignore_users: &'a Vec<String>,
 }
 
-pub fn read_config() -> Result<Config, Box<dyn Error>> {
+pub <'a> fn read_config() -> Result<Config<'a>, Box<dyn Error>> {
     let path = Path::new("config.toml");
     let mut file = File::open(path)?;
     let mut config = String::new();
