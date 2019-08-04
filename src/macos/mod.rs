@@ -96,7 +96,7 @@ impl OSXStatusBar {
         }
     }
 
-    pub fn update_title(&self, title: &str) {
+    pub fn set_title(&self, title: &str) {
         unsafe {
             let title = NSString::alloc(nil).init_str(title);
             NSButton::setTitle_(self.status_bar_item, title);
