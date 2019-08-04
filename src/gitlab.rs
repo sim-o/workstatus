@@ -8,7 +8,7 @@ use serde::de::DeserializeOwned;
 use r::Error;
 
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Copy, Clone)]
 struct Project {
     id: u32,
 }
@@ -60,7 +60,7 @@ impl<'a> Gitlab<'a> {
     }
 
     pub fn merge_request_count(&mut self, ignore_authors: Vec<String>) -> Result<usize, Error> {
-        let project = self.get_project()?;
+        let project = self.get_project()?.clone();
 
         let merge_requests: Vec<MergeRequest> = self.get(format!("/api/v4/projects/{:}/merge_requests?state=opened&per_page=100", project.id))?;
 
