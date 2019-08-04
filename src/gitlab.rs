@@ -42,7 +42,7 @@ pub struct Gitlab<'a> {
 }
 
 impl<'a> Gitlab<'a> {
-    fn new(host: &'a str, token: &'a str, project_name: &'a str) -> Gitlab<'a> {
+    pub fn new(host: &'a str, token: &'a str, project_name: &'a str) -> Gitlab<'a> {
         Gitlab {
             client: reqwest::Client::new(),
             host,

@@ -9,12 +9,13 @@ use std::sync::mpsc::Sender;
 use crate::macos::OSXStatusBar;
 use std::process::exit;
 use crate::config::read_config;
+use crate::gitlab::Gitlab;
 
 pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
 
 fn main() {
     let config = read_config().expect("error reading config.toml");
-    let gl = gitlab::new(
+    let gl = Gitlab::new(
         config.gitlab_url.as_str(),
         config.token.as_str(),
         config.project_name.as_str());
