@@ -46,7 +46,7 @@ fn main() {
 
             loop {
                 let result = gl.merge_request_count(&config.ignore_users)
-                    .map(|i| String::from(i).as_str())
+                    .map(|i| format!("{:}", i).as_str())
                     .unwrap_or("⨳");
                 tx.send(format!("{:}: {:}", config.project_name, result));
                 stopper.stop();
