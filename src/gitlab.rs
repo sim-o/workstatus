@@ -124,8 +124,8 @@ impl<'a> Gitlab<'a> {
                     .unwrap_or(false)
             })
             .map(|p| p.status)
-            .unwrap_or_else(|e| {
-                println!("error in details: {:?}", e)
+            .unwrap_or_else(|| {
+                println!("no details found");
                 Skipped
             });
 
