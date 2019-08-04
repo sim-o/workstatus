@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::Read;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Copy, Debug)]
 pub struct Config {
     pub gitlab_url: String,
     pub token: String,
