@@ -14,7 +14,7 @@ use crate::gitlab::Gitlab;
 pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
 
 fn main() {
-    let config = &read_config().expect("error reading config.toml");
+    let config = read_config().expect("error reading config.toml");
     let mut gl = Gitlab::new(
         config.gitlab_url.as_str(),
         config.token.as_str(),

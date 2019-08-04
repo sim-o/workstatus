@@ -7,11 +7,11 @@ use std::io::Read;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
-pub struct Config {
-    pub gitlab_url: String,
-    pub token: String,
-    pub project_name: String,
-    pub ignore_users: Vec<String>,
+pub struct Config<'a> {
+    pub gitlab_url: &'a String,
+    pub token: &'a String,
+    pub project_name: &'a String,
+    pub ignore_users: &'a Vec<String>,
 }
 
 pub fn read_config() -> Result<Config, Box<dyn Error>> {
