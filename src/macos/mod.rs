@@ -32,7 +32,7 @@ pub struct OSXStatusBar {
 }
 
 impl OSXStatusBar {
-    pub fn new(tx: Sender<String>) -> OSXStatusBar {
+    pub fn new(title: &String, tx: Sender<String>) -> OSXStatusBar {
         let mut bar;
         unsafe {
             let app = FruitApp::new();
@@ -50,7 +50,7 @@ impl OSXStatusBar {
             let _: () = msg_send![bar.status_bar_item, setHighlightMode:YES];
 
             // Set title.  Only displayed if image fails to load.
-            let title = NSString::alloc(nil).init_str("connectr");
+            let title = NSString::alloc(nil).init_str(title.as_str());
             NSButton::setTitle_(bar.status_bar_item, title);
             let _: () = msg_send![title, release];
 

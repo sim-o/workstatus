@@ -18,7 +18,7 @@ fn main() {
 
     let mut status_bar = {
         let (tx, rx) = channel::<String>();
-        let mut status_bar = OSXStatusBar::new(tx);
+        let mut status_bar = OSXStatusBar::new(&config.title, tx);
         let cb: NSCallback = Box::new(move |_sender, tx| {
             tx.send("quit".to_string());
         });
@@ -64,7 +64,7 @@ fn main() {
                         "?"
                     });
 
-                tx.send(format!("{:} {:} {:}", config.project_name, status, requires_merge));
+                tx.send(format!("{:} {:} {:}", config.title, status, requires_merge));
                 stopper.stop();
                 thread::sleep(Duration::from_millis(60_000));
             }
