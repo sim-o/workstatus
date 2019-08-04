@@ -108,7 +108,7 @@ impl<'a> Gitlab<'a> {
 
         let pipelines: Vec<Pipeline> = self.get(&format!(
             "/api/v4/projects/{:}/pipelines?ref={:}&per_page=1",
-            project_id, ref_name));
+            project_id, ref_name))?;
 
         let status = pipelines.get(0)
             .map(|p| p.status)
