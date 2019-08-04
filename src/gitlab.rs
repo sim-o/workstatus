@@ -60,9 +60,8 @@ impl<'a> Gitlab<'a> {
     }
 
     pub fn merge_request_count(&mut self, ignore_authors: Vec<String>) -> Result<usize, Error> {
-        let project = self.get_project()?.clone();
-
-        let merge_requests: Vec<MergeRequest> = self.get(format!("/api/v4/projects/{:}/merge_requests?state=opened&per_page=100", project.id))?;
+        let project_id = self.get_project_id()?;
+        let merge_requests: Vec<MergeRequest> = self.get(format!("/api/v4/projects/{:}/merge_requests?state=opened&per_page=100", project_id))?;
 
         let approvals = merge_requests.iter()
             .filter(|mr| !ignore_authors.contains(&mr.author.username))
