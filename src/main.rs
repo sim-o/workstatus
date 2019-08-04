@@ -39,7 +39,7 @@ fn main() {
 
     let (tx, rx) = channel::<String>();
     let stopper = status_bar.stopper();
-    let project_name = config.project_name;
+    let project_name = config.project_name.clone();
     let worker = thread::spawn(move || {
         loop {
             if let Ok(result) = gl.merge_request_count(config.ignore_users) {
