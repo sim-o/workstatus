@@ -29,7 +29,6 @@ pub struct OSXStatusBar {
     app: FruitApp,
     status_bar_item: *mut objc::runtime::Object,
     menu_bar: *mut objc::runtime::Object,
-    run_count: u32,
 }
 
 impl OSXStatusBar {
@@ -45,7 +44,6 @@ impl OSXStatusBar {
                 status_bar_item: status_bar.statusItemWithLength_(NSVariableStatusItemLength),
                 menu_bar: NSMenu::new(nil),
                 object: NSObj::alloc(tx),
-                run_count: 0,
             };
 
             // Default mode for menu bar items: blue highlight when selected

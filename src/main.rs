@@ -47,6 +47,8 @@ fn main() {
                 if let Ok(result) = gl.merge_request_count(ignore_users.clone()) {
                     tx.send(format!("{:}: {:}", config.project_name, result));
                     stopper.stop();
+                } else {
+                    tx.send(format!("{:}: ERR", config.project_name));
                 }
                 thread::sleep(Duration::from_millis(60_000));
             }
