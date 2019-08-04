@@ -8,7 +8,7 @@ use serde::de::DeserializeOwned;
 use r::Error;
 
 
-#[derive(Deserialize, Debug, Copy, Clone)]
+#[derive(Deserialize, Debug)]
 struct Project {
     id: u32,
 }
@@ -74,7 +74,7 @@ impl<'a> Gitlab<'a> {
         Ok(approvals)
     }
 
-    fn get_project(&mut self) -> Result<&Project, Error> {
+    fn get_project_id(&mut self) -> Result<u32, Error> {
         let project = match self.project {
             Some(project) => project,
             None => {
@@ -84,6 +84,6 @@ impl<'a> Gitlab<'a> {
                 &project
             }
         };
-        Ok(project)
+        Ok(project.id)
     }
 }
