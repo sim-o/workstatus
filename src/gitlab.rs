@@ -6,7 +6,7 @@ use percent_encoding::{NON_ALPHANUMERIC, utf8_percent_encode};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use r::Error;
-use crate::gitlab::PipelineStatus::Success;
+use crate::gitlab::PipelineStatus::{Success, Skipped};
 
 
 #[derive(Deserialize, Debug, Copy, Clone)]
@@ -124,7 +124,10 @@ impl<'a> Gitlab<'a> {
                     .unwrap_or(false)
             })
             .map(|p| p.status)
-            .unwrap_or(Success);
+            .unwrap_or_else(|e| {
+                println!("error in details: {:?}", e)
+                Skipped
+            });
 
         Ok(status)
     }
