@@ -65,7 +65,7 @@ impl<'a> Gitlab<'a> {
 
         let approvals = merge_requests.iter()
             .filter(|mr| !ignore_authors.contains(&mr.author.username))
-            .map(|mr| self.get::<MergeRequestApproval>(format!("/api/v4/projects/{:}/merge_requests/{:}/approvals", project.id, mr.iid)))
+            .map(|mr| self.get::<MergeRequestApproval>(format!("/api/v4/projects/{:}/merge_requests/{:}/approvals", project_id, mr.iid)))
             .filter_map(|mra| mra.ok())
             .filter(|mra| mra.approvals_left > 0 && mra.user_can_approve && !mra.user_has_approved)
             .count();
