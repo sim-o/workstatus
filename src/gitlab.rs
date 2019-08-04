@@ -38,7 +38,7 @@ pub struct Gitlab<'a> {
     host: &'a str,
     token: &'a str,
     project_name: &'a str,
-    project: Option<Project>,
+    project: &'a Option<Project>,
 }
 
 impl<'a> Gitlab<'a> {
@@ -48,7 +48,7 @@ impl<'a> Gitlab<'a> {
             host,
             token,
             project_name,
-            project: None,
+            project: &None,
         }
     }
 
@@ -74,13 +74,13 @@ impl<'a> Gitlab<'a> {
         Ok(approvals)
     }
 
-    fn get_project(&mut self) -> Project {
+    fn get_project(&mut self) -> Result<&Project, Error> {
         let project = match self.project {
             Some(project) => project,
             None => {
                 let project_name = utf8_percent_encode(, &NON_ALPHANUMERIC).to_string();
                 let project: Project = self.get(format!("/api/v4/projects/{:}", project_name))?;
-                self.project = Some(project);
+                self.project = &Some(project);
                 project
             }
         };
