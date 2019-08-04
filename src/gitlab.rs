@@ -48,7 +48,7 @@ impl<'a> Gitlab<'a> {
             host,
             token,
             project_name,
-            project: &None,
+            project: None,
         }
     }
 
