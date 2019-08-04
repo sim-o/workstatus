@@ -3,15 +3,22 @@ use std::{thread, time::Duration};
 
 mod gitlab;
 mod macos;
+mod config;
 
 use std::sync::mpsc::Sender;
 use crate::macos::OSXStatusBar;
 use std::process::exit;
+use crate::config::read_config;
 
 pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
 
 fn main() {
-//    println!("merge requests: {:?}", gitlab::merge_request_count().unwrap());
+    let config = read_config().expect("error reading config.toml");
+    let gl = gitlab::new(
+        config.gitlab_url.as_str(),
+        config.token.as_str(),
+        config.project_name.as_str());
+    println!("merge requests: {:?}", gl.merge_request_count(config.ignore_users).unwrap());
 
     let (tx, rx) = channel::<String>();
 

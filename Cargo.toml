@@ -10,6 +10,7 @@ edition = "2018"
 reqwest = "0.9.19"
 percent-encoding = "2.0.0"
 serde = "1.0.98"
+toml = "0.5.1"
 
 objc = "0.2.6"
 objc-foundation = "0.1.1"
