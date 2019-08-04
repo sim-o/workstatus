@@ -23,7 +23,7 @@ fn main() {
     let (tx, rx) = channel::<String>();
 
     let mut status_bar = OSXStatusBar::new(tx);
-    let cb: NSCallback = Box::new(move |sender, tx| {
+    let cb: NSCallback = Box::new(move |_sender, tx| {
         tx.send("quit".to_string());
     });
     let _ = status_bar.add_item(None, "Quit", cb, false);
