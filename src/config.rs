@@ -4,6 +4,7 @@ use std::error::Error;
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
