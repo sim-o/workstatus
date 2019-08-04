@@ -117,6 +117,7 @@ impl<'a> Gitlab<'a> {
             project_id, ref_name))?;
 
         let status = pipelines.get(0)
+            // exclude scheduled jobs
             .filter(|p| {
                 let url = format!("/api/v4/projects/{:}/pipelines/{:}", project_id, p.id);
                 let det: Option<PipelineDetail> = self.get(&url).ok();

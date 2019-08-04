@@ -58,7 +58,10 @@ fn main() {
                         PipelineStatus::Canceled => "⏹",
                         PipelineStatus::Skipped => "⦳",
                     })
-                    .unwrap_or("?");
+                    .unwrap_or_else(|e| {
+                        println!("error: {:?}", e);
+                        "?"
+                    });
 
                 tx.send(format!("{:} {:} {:}", config.project_name, status, requires_merge));
                 stopper.stop();
