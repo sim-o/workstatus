@@ -55,7 +55,7 @@ fn main() {
                         PipelineStatus::Pending => "🕗",
                         PipelineStatus::Success => "👍",
                         PipelineStatus::Failed => "💩",
-                        PipelineStatus::Canceled => "⏹",
+                        PipelineStatus::Canceled => "✋",
                         PipelineStatus::Skipped => "⦳",
                         PipelineStatus::Manual => "👉",
                     })
