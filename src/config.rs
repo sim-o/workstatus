@@ -16,6 +16,6 @@ pub fn read_config() -> Result<Config, Box<dyn Error>> {
     let path = Path::new("config.toml");
     let mut file = File::open(path)?;
     let mut config = String::new();
-    file.read_to_string(&mut config);
-    toml::from_str(config.as_str())
+    file.read_to_string(&mut config)?;
+    Ok(toml::from_str(config.as_str())?)
 }
