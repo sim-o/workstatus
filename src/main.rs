@@ -57,6 +57,7 @@ fn main() {
                         PipelineStatus::Failed => "💩",
                         PipelineStatus::Canceled => "⏹",
                         PipelineStatus::Skipped => "⦳",
+                        PipelineStatus::Manual => "🎚",
                     })
                     .unwrap_or_else(|e| {
                         println!("error: {:?}", e);
