@@ -84,6 +84,6 @@ impl<'a> Gitlab<'a> {
                 project
             }
         };
-        project
+        Ok(project)
     }
 }
