@@ -115,7 +115,7 @@ impl<'a> Gitlab<'a> {
             "/api/v4/projects/{:}/pipelines?ref={:}&per_page=100",
             project_id, ref_name))?;
 
-        let status = pipelines.get(0)
+        let status = pipelines
             // exclude scheduled jobs
             .filter(|p| {
                 let url = format!("/api/v4/projects/{:}/pipelines/{:}", project_id, p.id);
@@ -124,6 +124,7 @@ impl<'a> Gitlab<'a> {
                 det.map(|d| !d.before_sha.trim_matches('0').is_empty())
                     .unwrap_or(false)
             })
+            .get(0)
             .map(|p| p.status)
             .unwrap_or_else(|| {
                 println!("no details found");
