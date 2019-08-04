@@ -42,8 +42,9 @@ fn main() {
                 config.token.as_str(),
                 config.project_name.as_str());
 
+            let ignore_users = config.ignore_users;
             loop {
-                if let Ok(result) = gl.merge_request_count(config.ignore_users) {
+                if let Ok(result) = gl.merge_request_count(ignore_users) {
                     tx.send(format!("{:}: {:}", config.project_name, result));
                     stopper.stop();
                 }
