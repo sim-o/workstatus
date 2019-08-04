@@ -46,7 +46,6 @@ struct Pipeline {
     status: PipelineStatus,
     #[serde(rename = "ref")]
     ref_name: String,
-    username: String,
 }
 
 #[derive(Deserialize, Debug)]
