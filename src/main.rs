@@ -15,25 +15,6 @@ pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
 
 fn main() {
     let config = read_config().expect("error reading config.toml");
-    {
-        let (tx, rx) = channel::<String>();
-        let stopper = status_bar.stopper();
-        thread::spawn(move || {
-            let mut gl = Gitlab::new(
-                config.gitlab_url.as_str(),
-                config.token.as_str(),
-                config.project_name.as_str());
-
-            loop {
-                if let Ok(result) = gl.merge_request_count(config.ignore_users) {
-                    tx.send(format!("{:}: {:}", config.project_name, result));
-                    stopper.stop();
-                }
-                thread::sleep(Duration::from_millis(60_000));
-            }
-        });
-    }
-
 
     let (tx, rx) = channel::<String>();
 
@@ -52,6 +33,24 @@ fn main() {
         }
     });
 
+    {
+        let (tx, rx) = channel::<String>();
+        let stopper = status_bar.stopper();
+        thread::spawn(move || {
+            let mut gl = Gitlab::new(
+                config.gitlab_url.as_str(),
+                config.token.as_str(),
+                config.project_name.as_str());
+
+            loop {
+                if let Ok(result) = gl.merge_request_count(config.ignore_users) {
+                    tx.send(format!("{:}: {:}", config.project_name, result));
+                    stopper.stop();
+                }
+                thread::sleep(Duration::from_millis(60_000));
+            }
+        });
+    }
 
     loop {
         status_bar.run(true);
