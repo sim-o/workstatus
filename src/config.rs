@@ -8,7 +8,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct Config {
-    pub display: String,
+    pub title: String,
     pub gitlab_url: String,
     pub token: String,
     pub project_name: String,
