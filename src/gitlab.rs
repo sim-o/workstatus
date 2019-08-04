@@ -8,7 +8,7 @@ use serde::de::DeserializeOwned;
 use r::Error;
 
 
-#[derive(Deserialize, Debug, Copy)]
+#[derive(Deserialize, Debug, Copy, Clone)]
 struct Project {
     id: u32,
 }
