@@ -64,7 +64,12 @@ fn main() {
                         "?"
                     });
 
-                tx.send(format!("{:} {:} {:}", config.title, status, requires_merge));
+                let msg = if requires_merge != "0" {
+                    format!("{:} {:} {:}", config.title, status, requires_merge)
+                } else {
+                    format!("{:} {:}", config.title, status)
+                };
+                tx.send(msg);
                 stopper.stop();
                 thread::sleep(Duration::from_millis(60_000));
             }
@@ -74,7 +79,7 @@ fn main() {
 
     loop {
         status_bar.run(true);
-        if let Ok(title) = rx.try_recv() {
+        while let Ok(title) = rx.try_recv() {
             status_bar.set_title(title.as_str());
         }
     }
