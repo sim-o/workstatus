@@ -3,11 +3,11 @@ extern crate reqwest as r;
 extern crate serde;
 
 use percent_encoding::{NON_ALPHANUMERIC, utf8_percent_encode};
-use serde::Deserialize;
-use serde::de::DeserializeOwned;
 use r::Error;
-use crate::gitlab::PipelineStatus::{Success, Skipped};
+use serde::de::DeserializeOwned;
+use serde::Deserialize;
 
+use crate::gitlab::PipelineStatus::{Skipped};
 
 #[derive(Deserialize, Debug, Copy, Clone)]
 struct Project {
@@ -37,7 +37,13 @@ struct MergeRequestApproval {
 #[derive(Deserialize, Debug, Copy, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum PipelineStatus {
-    Running, Pending, Success, Failed, Canceled, Skipped, Manual,
+    Running,
+    Pending,
+    Success,
+    Failed,
+    Canceled,
+    Skipped,
+    Manual,
 }
 
 #[derive(Deserialize, Debug)]
@@ -46,6 +52,7 @@ struct Pipeline {
     status: PipelineStatus,
     #[serde(rename = "ref")]
     ref_name: String,
+    sha: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -54,12 +61,34 @@ struct PipelineDetail {
     before_sha: String,
 }
 
+#[derive(Deserialize, Debug)]
+struct Commit {
+    id: String,
+    message: String,
+    author_name: String,
+    author_email: String,
+    committer_name: String,
+    committer_email: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct Branch {
+    name: String,
+    merged: bool,
+    commit: Commit,
+}
+
 pub struct Gitlab<'a> {
     client: reqwest::Client,
     host: &'a str,
     token: &'a str,
     project_name: &'a str,
     project: Option<Project>,
+}
+
+pub struct MergeRequestStatus {
+    pub branch: String,
+    pub status: PipelineStatus,
 }
 
 impl<'a> Gitlab<'a> {
@@ -89,7 +118,7 @@ impl<'a> Gitlab<'a> {
                 let project_id = project.id;
                 self.project = Some(project);
                 project_id
-            },
+            }
         };
         Ok(project_id)
     }
@@ -131,5 +160,28 @@ impl<'a> Gitlab<'a> {
             });
 
         Ok(status)
+    }
+
+    pub fn user_merge_requests(&mut self, usernames: &Vec<String>) -> Result<Vec<MergeRequestStatus>, Error> {
+        let project_id = self.get_project_id()?;
+
+        let merge_requests: Vec<Pipeline> = self.get(&format!("/api/v4/projects/{:}/pipelines?status=failed&scope=branches&per_page=100", project_id))?;
+        let result = merge_requests.iter()
+            .filter(|p| {
+                let branch: Result<Branch, _> = self.get(&format!("/api/v4/repository/branches/{:}", p.ref_name));
+                if let Ok(branch) = branch {
+                    !branch.merged &&
+                        usernames.iter().any(|u| branch.commit.committer_name == *u || branch.commit.committer_email == *u || branch.commit.message.contains(u))
+                } else {
+                    false
+                }
+            })
+            .map(|p| MergeRequestStatus {
+                branch: p.ref_name.clone(),
+                status: p.status,
+            })
+            .collect();
+
+        Ok(result)
     }
 }

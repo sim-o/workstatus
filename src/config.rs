@@ -13,6 +13,7 @@ pub struct Config {
     pub token: String,
     pub project_name: String,
     pub ignore_users: Vec<String>,
+    pub branch_users: Vec<String>,
 }
 
 pub fn read_config() -> Result<Config, Box<dyn Error>> {

@@ -1,15 +1,15 @@
-use std::sync::mpsc::channel;
 use std::{thread, time::Duration};
+use std::process::exit;
+use std::sync::mpsc::channel;
+use std::sync::mpsc::Sender;
+
+use crate::config::read_config;
+use crate::gitlab::{Gitlab, PipelineStatus};
+use crate::macos::OSXStatusBar;
 
 mod gitlab;
 mod macos;
 mod config;
-
-use std::sync::mpsc::Sender;
-use crate::macos::OSXStatusBar;
-use std::process::exit;
-use crate::config::read_config;
-use crate::gitlab::{Gitlab, PipelineStatus};
 
 pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
 
@@ -50,26 +50,28 @@ fn main() {
                     .unwrap_or("⨳".to_string());
 
                 let status = gl.pipeline_status("master")
-                    .map(|master_status| match master_status {
-                        PipelineStatus::Running => "🏃",
-                        PipelineStatus::Pending => "🕗",
-                        PipelineStatus::Success => "👍",
-                        PipelineStatus::Failed => "💩",
-                        PipelineStatus::Canceled => "✋",
-                        PipelineStatus::Skipped => "⦳",
-                        PipelineStatus::Manual => "👉",
-                    })
+                    .map(status_icon)
                     .unwrap_or_else(|e| {
                         println!("error: {:?}", e);
                         "?"
                     });
 
-                let msg = if requires_merge != "0" {
-                    format!("{:} {:} {:}", config.title, status, requires_merge)
-                } else {
-                    format!("{:} {:}", config.title, status)
-                };
-                tx.send(msg);
+                let merge_requests: String = gl.user_merge_requests(&config.branch_users)
+                    .map(|v| v.iter()
+                        .map(|mrs| format!("{:}{:}", mrs.branch, status_icon(mrs.status)))
+                        .collect())
+                    .unwrap_or("⨳".to_string());
+
+                let mut title = format!("{:} {:}", config.title, status);
+                if requires_merge != "0" {
+                    title.push(' ');
+                    title.push_str(&*requires_merge);
+                }
+                if merge_requests != "" {
+                    title.push(' ');
+                    title.push_str(&*merge_requests);
+                }
+                tx.send(title);
                 stopper.stop();
                 thread::sleep(Duration::from_millis(60_000));
             }
@@ -82,5 +84,17 @@ fn main() {
         while let Ok(title) = rx.try_recv() {
             status_bar.set_title(title.as_str());
         }
+    }
+}
+
+fn status_icon(status: PipelineStatus) -> &'static str {
+    match status {
+        PipelineStatus::Running => "🏃",
+        PipelineStatus::Pending => "🕗",
+        PipelineStatus::Success => "👍",
+        PipelineStatus::Failed => "💩",
+        PipelineStatus::Canceled => "✋",
+        PipelineStatus::Skipped => "⦳",
+        PipelineStatus::Manual => "👉",
     }
 }
