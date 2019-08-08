@@ -7,7 +7,9 @@ use r::Error;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 
-use crate::gitlab::PipelineStatus::{Skipped};
+use crate::gitlab::PipelineStatus::Skipped;
+use std::collections::HashSet;
+use std::hash::Hash;
 
 #[derive(Deserialize, Debug, Copy, Clone)]
 struct Project {
@@ -168,17 +170,37 @@ impl<'a> Gitlab<'a> {
         let merge_requests: Vec<Pipeline> = self.get(&format!("/api/v4/projects/{:}/pipelines?status=failed&scope=branches&per_page=100", project_id))?;
         let result = merge_requests.iter()
             .filter(|p| {
-                let branch: Result<Branch, _> = self.get(&format!("/api/v4/repository/branches/{:}", p.ref_name));
-                if let Ok(branch) = branch {
-                    !branch.merged &&
-                        usernames.iter().any(|u| branch.commit.committer_name == *u || branch.commit.committer_email == *u || branch.commit.message.contains(u))
-                } else {
-                    false
+                let branch: Result<Branch, _> = self.get(&format!("/api/v4/projects/{:}/repository/branches/{:}", project_id, p.ref_name));
+                match branch {
+                    Ok(branch) => {
+                        !branch.merged && branch.commit.id == p.sha && usernames.iter().any(|u|
+                            branch.commit.committer_name == *u ||
+                                branch.commit.committer_email == *u ||
+                                branch.commit.message.contains(u))
+                    }
+                    Err(e) => {
+                        println!("error fetching branch {:?}", e);
+                        false
+                    }
                 }
             })
-            .map(|p| MergeRequestStatus {
-                branch: p.ref_name.clone(),
-                status: p.status,
+            .map(|p| &p.ref_name)
+            .collect::<HashSet<_>>().iter()
+            .filter(|&branch_name| {
+                let merge_requests: Result<Vec<MergeRequest>, _> = self.get(&format!("/api/v4/projects/{:}/merge_requests?source_branch={:}&status=opened", project_id, branch_name));
+                match merge_requests {
+                    Ok(merge_requests) => {
+                        !merge_requests.is_empty()
+                    }
+                    Err(e) => {
+                        println!("error fetching merge requests {:?}", e);
+                        false
+                    }
+                }
+            })
+            .map(|&branch| MergeRequestStatus {
+                branch: branch.clone(),
+                status: PipelineStatus::Failed,
             })
             .collect();
 
