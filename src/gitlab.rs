@@ -21,6 +21,8 @@ struct MergeRequest {
     id: u32,
     iid: u32,
     author: MergeRequestAuthor,
+    source_branch: String,
+    sha: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -167,13 +169,13 @@ impl<'a> Gitlab<'a> {
     pub fn user_merge_requests(&mut self, usernames: &Vec<String>) -> Result<Vec<MergeRequestStatus>, Error> {
         let project_id = self.get_project_id()?;
 
-        let merge_requests: Vec<Pipeline> = self.get(&format!("/api/v4/projects/{:}/pipelines?status=failed&scope=branches&per_page=100", project_id))?;
+        let merge_requests: Vec<MergeRequest> = self.get(&format!("/api/v4/projects/{:}/merge_requests?state=opened&per_page=100", project_id))?;
         let result = merge_requests.iter()
-            .filter(|p| {
-                let branch: Result<Branch, _> = self.get(&format!("/api/v4/projects/{:}/repository/branches/{:}", project_id, p.ref_name));
+            .filter(|mr| {
+                let branch: Result<Branch, _> = self.get(&format!("/api/v4/projects/{:}/repository/branches/{:}", project_id, mr.source_branch));
                 match branch {
                     Ok(branch) => {
-                        !branch.merged && branch.commit.id == p.sha && usernames.iter().any(|u|
+                        !branch.merged && branch.commit.id == mr.sha && usernames.iter().any(|u|
                             branch.commit.committer_name == *u ||
                                 branch.commit.committer_email == *u ||
                                 branch.commit.message.contains(u))
@@ -184,22 +186,18 @@ impl<'a> Gitlab<'a> {
                     }
                 }
             })
-            .map(|p| &p.ref_name)
-            .collect::<HashSet<_>>().iter()
-            .filter(|&branch_name| {
-                let merge_requests: Result<Vec<MergeRequest>, _> = self.get(&format!("/api/v4/projects/{:}/merge_requests?source_branch={:}&status=opened", project_id, branch_name));
-                match merge_requests {
-                    Ok(merge_requests) => {
-                        !merge_requests.is_empty()
-                    }
+            .filter(|mr| {
+                let pipelines: Result<Vec<Pipeline>, _> = self.get(&format!("/api/v4/projects/{:}/pipelines?status=failed&sha={:}", project_id, mr.sha));
+                match pipelines {
+                    Ok(pipelines) => !pipelines.is_empty(),
                     Err(e) => {
-                        println!("error fetching merge requests {:?}", e);
+                        println!("error fetching branch {:?}", e);
                         false
                     }
                 }
             })
-            .map(|&branch| MergeRequestStatus {
-                branch: branch.clone(),
+            .map(|mr| MergeRequestStatus {
+                branch: mr.source_branch.clone(),
                 status: PipelineStatus::Failed,
             })
             .collect();
