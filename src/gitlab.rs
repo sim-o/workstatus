@@ -176,9 +176,11 @@ impl<'a> Gitlab<'a> {
                 match branch {
                     Ok(branch) => {
                         !branch.merged && branch.commit.id == mr.sha && usernames.iter().any(|u|
+                            branch.commit.author_name == *u ||
+                            branch.commit.author_email == *u ||
                             branch.commit.committer_name == *u ||
-                                branch.commit.committer_email == *u ||
-                                branch.commit.message.contains(u))
+                            branch.commit.committer_email == *u ||
+                            branch.commit.message.contains(u))
                     }
                     Err(e) => {
                         println!("error fetching branch {:?}", e);

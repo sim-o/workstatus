@@ -60,7 +60,10 @@ fn main() {
                     .map(|v| v.iter()
                         .map(|mrs| format!("{:}{:}", mrs.branch, status_icon(mrs.status)))
                         .collect())
-                    .unwrap_or("⨳".to_string());
+                    .unwrap_or_else(|e| {
+                        println!("error: {:?}", e);
+                        "⨳".to_string()
+                    });
 
                 let mut title = format!("{:} {:}", config.title, status);
                 if requires_merge != "0" {
