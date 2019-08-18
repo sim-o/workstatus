@@ -17,4 +17,4 @@ export CC=o64-clang
 export CC=x86_64-apple-darwin14-cc
 export CXX=o64-clang++
 
-cargo build --target "${MACOS_TARGET}" --verbose
+nice cargo build --target "${MACOS_TARGET}" --verbose

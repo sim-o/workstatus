@@ -8,17 +8,17 @@ extern crate objc_id;
 
 use std::sync::{Once, ONCE_INIT};
 
-use objc::Message;
+use self::objc_foundation::{INSObject, NSObject};
 use objc::declare::ClassDecl;
 use objc::runtime::{Class, Object, Sel};
+use objc::Message;
 use objc::*;
-use self::objc_foundation::{INSObject, NSObject};
 
 use std::collections::BTreeMap;
 
 use self::objc_id::Id;
-use self::objc_id::WeakId;
 use self::objc_id::Shared;
+use self::objc_id::WeakId;
 
 use std::sync::mpsc::Sender;
 
@@ -64,15 +64,15 @@ impl NSObjTrait for NSObj {
         let objc = ObjcSubclass::new().share();
         let rust = Box::new(RustWrapperClass {
             objc: objc,
-            map: BTreeMap::<u64,NSCallback>::new(),
+            map: BTreeMap::<u64, NSCallback>::new(),
             cb_fn: None,
             tx: tx,
         });
         unsafe {
             let ptr: u64 = &*rust as *const RustWrapperClass as u64;
-            let _:() = msg_send![rust.objc, setRustData: ptr];
+            let _: () = msg_send![rust.objc, setRustData: ptr];
         }
-        return rust
+        return rust;
     }
     fn selector(&self) -> Sel {
         sel!(cb:)
@@ -108,7 +108,7 @@ impl NSObjCallbackTrait for NSObj {
 pub enum ObjcSubclass {}
 impl ObjcSubclass {}
 
-unsafe impl Message for ObjcSubclass { }
+unsafe impl Message for ObjcSubclass {}
 
 static OBJC_SUBCLASS_REGISTER_CLASS: Once = ONCE_INIT;
 
@@ -116,10 +116,11 @@ impl INSObject for ObjcSubclass {
     fn class() -> &'static Class {
         OBJC_SUBCLASS_REGISTER_CLASS.call_once(|| {
             let superclass = NSObject::class();
-            let mut decl = ClassDecl::new("ConnectrObjcSubclass", superclass).expect("Failed to create custom ObjC class.");
+            let mut decl = ClassDecl::new("ConnectrObjcSubclass", superclass)
+                .expect("Failed to create custom ObjC class.");
             decl.add_ivar::<u64>("_rustdata");
 
-            extern fn objc_cb(this: &mut Object, _cmd: Sel, sender: u64) {
+            extern "C" fn objc_cb(this: &mut Object, _cmd: Sel, sender: u64) {
                 unsafe {
                     let ptr: u64 = *this.get_ivar("_rustdata");
                     let rustdata: &mut RustWrapperClass = &mut *(ptr as *mut RustWrapperClass);
@@ -130,25 +131,27 @@ impl INSObject for ObjcSubclass {
                     }
                 }
             }
-            extern fn objc_set_rust_data(this: &mut Object, _cmd: Sel, ptr: u64) {
-                unsafe {this.set_ivar("_rustdata", ptr);}
+            extern "C" fn objc_set_rust_data(this: &mut Object, _cmd: Sel, ptr: u64) {
+                unsafe {
+                    this.set_ivar("_rustdata", ptr);
+                }
             }
-            extern fn objc_get_rust_data(this: &Object, _cmd: Sel) -> u64 {
-                unsafe {*this.get_ivar("_rustdata")}
+            extern "C" fn objc_get_rust_data(this: &Object, _cmd: Sel) -> u64 {
+                unsafe { *this.get_ivar("_rustdata") }
             }
 
-            extern fn objc_url(_this: &Object, _cmd: Sel, _event: u64, _reply: u64) {
+            extern "C" fn objc_url(_this: &Object, _cmd: Sel, _event: u64, _reply: u64) {
                 println!("connectr URL support not implemented yet.");
             }
 
             unsafe {
-                let f: extern fn(&mut Object, Sel, u64) = objc_cb;
+                let f: extern "C" fn(&mut Object, Sel, u64) = objc_cb;
                 decl.add_method(sel!(cb:), f);
-                let f: extern fn(&mut Object, Sel, u64) = objc_set_rust_data;
+                let f: extern "C" fn(&mut Object, Sel, u64) = objc_set_rust_data;
                 decl.add_method(sel!(setRustData:), f);
-                let f: extern fn(&Object, Sel) -> u64 = objc_get_rust_data;
+                let f: extern "C" fn(&Object, Sel) -> u64 = objc_get_rust_data;
                 decl.add_method(sel!(rustData), f);
-                let f: extern fn(&Object, Sel, u64, u64) = objc_url;
+                let f: extern "C" fn(&Object, Sel, u64, u64) = objc_url;
                 decl.add_method(sel!(handleURLEvent:withReplyEvent:), f);
             }
 

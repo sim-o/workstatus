@@ -1,15 +1,14 @@
 extern crate percent_encoding;
-extern crate reqwest as r;
+extern crate reqwest;
 extern crate serde;
 
-use percent_encoding::{NON_ALPHANUMERIC, utf8_percent_encode};
-use r::Error;
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 
+use reqwest::Error;
+
 use crate::gitlab::PipelineStatus::Skipped;
-use std::collections::HashSet;
-use std::hash::Hash;
 
 #[derive(Deserialize, Debug, Copy, Clone)]
 struct Project {
@@ -33,6 +32,8 @@ struct MergeRequestAuthor {
 
 #[derive(Deserialize, Debug)]
 struct MergeRequestApproval {
+    id: u32,
+    iid: u32,
     approvals_left: u32,
     user_can_approve: bool,
     user_has_approved: bool,
@@ -52,7 +53,7 @@ pub enum PipelineStatus {
 
 #[derive(Deserialize, Debug)]
 struct Pipeline {
-    id: i32,
+    id: u32,
     status: PipelineStatus,
     #[serde(rename = "ref")]
     ref_name: String,
@@ -61,7 +62,7 @@ struct Pipeline {
 
 #[derive(Deserialize, Debug)]
 struct PipelineDetail {
-    id: i32,
+    id: u32,
     before_sha: String,
 }
 
@@ -80,6 +81,19 @@ struct Branch {
     name: String,
     merged: bool,
     commit: Commit,
+}
+
+#[derive(Deserialize, Debug)]
+struct Note {
+    id: u32,
+    author: NoteAuthor,
+}
+
+#[derive(Deserialize, Debug)]
+struct NoteAuthor {
+    id: u32,
+    username: String,
+    email: String,
 }
 
 pub struct Gitlab<'a> {
@@ -107,7 +121,8 @@ impl<'a> Gitlab<'a> {
     }
 
     fn get<T: DeserializeOwned>(&self, path: &String) -> Result<T, Error> {
-        self.client.get(format!("{:}{:}", self.host, path).as_str())
+        self.client
+            .get(format!("{:}{:}", self.host, path).as_str())
             .header("Private-Token", self.token)
             .send()?
             .json()
@@ -129,13 +144,40 @@ impl<'a> Gitlab<'a> {
 
     pub fn merge_request_count(&mut self, ignore_authors: &Vec<String>) -> Result<usize, Error> {
         let project_id = self.get_project_id()?;
-        let merge_requests: Vec<MergeRequest> = self.get(&format!("/api/v4/projects/{:}/merge_requests?state=opened&per_page=100", project_id))?;
+        let merge_requests: Vec<MergeRequest> = self.get(&format!(
+            "/api/v4/projects/{:}/merge_requests?state=opened&per_page=100",
+            project_id
+        ))?;
 
         let approvals = merge_requests.iter()
             .filter(|mr| !ignore_authors.contains(&mr.author.username))
             .map(|mr| self.get::<MergeRequestApproval>(&format!("/api/v4/projects/{:}/merge_requests/{:}/approvals", project_id, mr.iid)))
-            .filter_map(|mra| mra.ok())
+            .filter_map(|mra| {
+                match mra {
+                    Ok(mra) => Some(mra),
+                    Err(e) => {
+                        println!("error in approval: {:?}", e);
+                        None
+                    }
+                }
+            })
             .filter(|mra| mra.approvals_left > 0 && mra.user_can_approve && !mra.user_has_approved)
+            .filter(|mra| {
+                let url = format!("/api/v4/projects/{:}/merge_requests/{:}/notes?sort=desc&order_by=updated_at&per_page=1", project_id, mra.iid);
+                let notes: Result<Vec<Note>, _> = self.get(&url);
+                match notes {
+                    Ok(notes) => {
+                        notes
+                            .get(0)
+                            .map(|n| !ignore_authors.contains(&n.author.username))
+                            .unwrap_or(true)
+                    },
+                    Err(e) => {
+                        println!("error in notes: {:?}", e);
+                        false
+                    }
+                }
+            })
             .count();
 
         Ok(approvals)
@@ -146,15 +188,22 @@ impl<'a> Gitlab<'a> {
 
         let pipelines: Vec<Pipeline> = self.get(&format!(
             "/api/v4/projects/{:}/pipelines?ref={:}&per_page=100",
-            project_id, ref_name))?;
+            project_id, ref_name
+        ))?;
 
-        let status = pipelines.iter()
+        let status = pipelines
+            .iter()
             // exclude scheduled jobs
             .filter(|p| {
-                let url = format!("/api/v4/projects/{:}/pipelines/{:}", project_id, p.id);
-                let det: Option<PipelineDetail> = self.get(&url).ok();
+                let det: Result<PipelineDetail, _> = self.get(&format!(
+                    "/api/v4/projects/{:}/pipelines/{:}",
+                    project_id, p.id
+                ));
                 det.map(|d| !d.before_sha.trim_matches('0').is_empty())
-                    .unwrap_or(false)
+                    .unwrap_or_else(|e| {
+                        println!("error in pipeline: {:?}", e);
+                        false
+                    })
             })
             .next()
             .map(|p| p.status)
@@ -166,21 +215,34 @@ impl<'a> Gitlab<'a> {
         Ok(status)
     }
 
-    pub fn user_merge_requests(&mut self, usernames: &Vec<String>) -> Result<Vec<MergeRequestStatus>, Error> {
+    pub fn user_merge_requests(
+        &mut self,
+        usernames: &Vec<String>,
+    ) -> Result<Vec<MergeRequestStatus>, Error> {
         let project_id = self.get_project_id()?;
 
-        let merge_requests: Vec<MergeRequest> = self.get(&format!("/api/v4/projects/{:}/merge_requests?state=opened&per_page=100", project_id))?;
-        let result = merge_requests.iter()
+        let merge_requests: Vec<MergeRequest> = self.get(&format!(
+            "/api/v4/projects/{:}/merge_requests?state=opened&per_page=100",
+            project_id
+        ))?;
+        let result = merge_requests
+            .iter()
             .filter(|mr| {
-                let branch: Result<Branch, _> = self.get(&format!("/api/v4/projects/{:}/repository/branches/{:}", project_id, mr.source_branch));
+                let branch: Result<Branch, _> = self.get(&format!(
+                    "/api/v4/projects/{:}/repository/branches/{:}",
+                    project_id, mr.source_branch
+                ));
                 match branch {
                     Ok(branch) => {
-                        !branch.merged && branch.commit.id == mr.sha && usernames.iter().any(|u|
-                            branch.commit.author_name == *u ||
-                            branch.commit.author_email == *u ||
-                            branch.commit.committer_name == *u ||
-                            branch.commit.committer_email == *u ||
-                            branch.commit.message.contains(u))
+                        !branch.merged
+                            && branch.commit.id == mr.sha
+                            && usernames.iter().any(|u| {
+                                branch.commit.author_name == *u
+                                    || branch.commit.author_email == *u
+                                    || branch.commit.committer_name == *u
+                                    || branch.commit.committer_email == *u
+                                    || branch.commit.message.contains(u)
+                            })
                     }
                     Err(e) => {
                         println!("error fetching branch {:?}", e);
@@ -189,7 +251,10 @@ impl<'a> Gitlab<'a> {
                 }
             })
             .filter(|mr| {
-                let pipelines: Result<Vec<Pipeline>, _> = self.get(&format!("/api/v4/projects/{:}/pipelines?status=failed&sha={:}", project_id, mr.sha));
+                let pipelines: Result<Vec<Pipeline>, _> = self.get(&format!(
+                    "/api/v4/projects/{:}/pipelines?status=failed&sha={:}",
+                    project_id, mr.sha
+                ));
                 match pipelines {
                     Ok(pipelines) => !pipelines.is_empty(),
                     Err(e) => {

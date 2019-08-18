@@ -9,12 +9,8 @@ use objc::*;
 
 use crate::NSCallback;
 
-use self::cocoa::appkit::{NSButton,
-                          NSMenu,
-                          NSMenuItem,
-                          NSStatusItem,
-                          NSVariableStatusItemLength};
 use self::cocoa::appkit::NSStatusBar;
+use self::cocoa::appkit::{NSButton, NSMenu, NSMenuItem, NSStatusItem, NSVariableStatusItemLength};
 use self::cocoa::base::{nil, YES};
 use self::cocoa::foundation::NSString;
 use self::fruitbasket::{FruitApp, FruitStopper};
@@ -47,7 +43,7 @@ impl OSXStatusBar {
             };
 
             // Default mode for menu bar items: blue highlight when selected
-            let _: () = msg_send![bar.status_bar_item, setHighlightMode:YES];
+            let _: () = msg_send![bar.status_bar_item, setHighlightMode: YES];
 
             // Set title.  Only displayed if image fails to load.
             let title = NSString::alloc(nil).init_str(title.as_str());
@@ -55,12 +51,10 @@ impl OSXStatusBar {
             let _: () = msg_send![title, release];
 
             bar.status_bar_item.setMenu_(bar.menu_bar);
-            bar.object.cb_fn = Some(Box::new(
-                move |s, sender| {
-                    let cb = s.get_value(sender);
-                    cb(sender, &s.tx);
-                }
-            ));
+            bar.object.cb_fn = Some(Box::new(move |s, sender| {
+                let cb = s.get_value(sender);
+                cb(sender, &s.tx);
+            }));
         }
         bar
     }
@@ -72,12 +66,21 @@ impl OSXStatusBar {
     // TODO: whole API should accept menu option.  this whole thing should
     // be split out into its own recursive menu-builder trait.  this is
     // horrible.
-    pub fn add_item(&mut self, menu: Option<*mut Object>,item: &str, callback: NSCallback, selected: bool) -> *mut Object {
+    pub fn add_item(
+        &mut self,
+        menu: Option<*mut Object>,
+        item: &str,
+        callback: NSCallback,
+        selected: bool,
+    ) -> *mut Object {
         unsafe {
             let txt = NSString::alloc(nil).init_str(item);
             let quit_key = NSString::alloc(nil).init_str("");
-            let app_menu_item = NSMenuItem::alloc(nil)
-                .initWithTitle_action_keyEquivalent_(txt, self.object.selector(), quit_key);
+            let app_menu_item = NSMenuItem::alloc(nil).initWithTitle_action_keyEquivalent_(
+                txt,
+                self.object.selector(),
+                quit_key,
+            );
             let _: () = msg_send![txt, release];
             let _: () = msg_send![quit_key, release];
             self.object.add_callback(app_menu_item, callback);
@@ -88,8 +91,12 @@ impl OSXStatusBar {
             }
             let item: *mut Object = app_menu_item;
             match menu {
-                Some(menu) => { menu.addItem_(app_menu_item); },
-                None => { self.menu_bar.addItem_(app_menu_item); }
+                Some(menu) => {
+                    menu.addItem_(app_menu_item);
+                }
+                None => {
+                    self.menu_bar.addItem_(app_menu_item);
+                }
             }
             let _: () = msg_send![app_menu_item, release];
             item

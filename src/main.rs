@@ -1,15 +1,15 @@
-use std::{thread, time::Duration};
 use std::process::exit;
 use std::sync::mpsc::channel;
 use std::sync::mpsc::Sender;
+use std::{thread, time::Duration};
 
 use crate::config::read_config;
 use crate::gitlab::{Gitlab, PipelineStatus};
 use crate::macos::OSXStatusBar;
 
+mod config;
 mod gitlab;
 mod macos;
-mod config;
 
 pub type NSCallback = Box<dyn Fn(u64, &Sender<String>)>;
 
@@ -20,7 +20,7 @@ fn main() {
         let (tx, rx) = channel::<String>();
         let mut status_bar = OSXStatusBar::new(&config.title, tx);
         let cb: NSCallback = Box::new(move |_sender, tx| {
-            tx.send("quit".to_string());
+            tx.send("quit".to_string()).expect("action send failed");
         });
         let _ = status_bar.add_item(None, "Quit", cb, false);
 
@@ -42,24 +42,30 @@ fn main() {
             let mut gl = Gitlab::new(
                 config.gitlab_url.as_str(),
                 config.token.as_str(),
-                config.project_name.as_str());
+                config.project_name.as_str(),
+            );
 
             loop {
-                let requires_merge = gl.merge_request_count(&config.ignore_users)
+                let requires_merge = gl
+                    .merge_request_count(&config.ignore_users)
                     .map(|i| format!("{:}", i))
                     .unwrap_or("⨳".to_string());
 
-                let status = gl.pipeline_status("master")
+                let status = gl
+                    .pipeline_status("master")
                     .map(status_icon)
                     .unwrap_or_else(|e| {
                         println!("error: {:?}", e);
                         "?"
                     });
 
-                let merge_requests: String = gl.user_merge_requests(&config.branch_users)
-                    .map(|v| v.iter()
-                        .map(|mrs| format!("{:}{:}", mrs.branch, status_icon(mrs.status)))
-                        .collect())
+                let merge_requests: String = gl
+                    .user_merge_requests(&config.branch_users)
+                    .map(|v| {
+                        v.iter()
+                            .map(|mrs| format!("{:}{:}", mrs.branch, status_icon(mrs.status)))
+                            .collect()
+                    })
                     .unwrap_or_else(|e| {
                         println!("error: {:?}", e);
                         "⨳".to_string()
@@ -74,7 +80,7 @@ fn main() {
                     title.push(' ');
                     title.push_str(&*merge_requests);
                 }
-                tx.send(title);
+                tx.send(title).expect("worker send failed");
                 stopper.stop();
                 thread::sleep(Duration::from_millis(60_000));
             }

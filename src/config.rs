@@ -1,10 +1,10 @@
 extern crate toml;
 
+use serde::Deserialize;
 use std::error::Error;
-use std::path::Path;
 use std::fs::File;
 use std::io::Read;
-use serde::Deserialize;
+use std::path::Path;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct Config {
