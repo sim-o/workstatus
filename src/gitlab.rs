@@ -1,7 +1,9 @@
+extern crate chrono;
 extern crate percent_encoding;
 extern crate reqwest;
 extern crate serde;
 
+use chrono::{DateTime, Utc};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
@@ -22,6 +24,7 @@ struct MergeRequest {
     author: MergeRequestAuthor,
     source_branch: String,
     sha: String,
+    updated_at: DateTime<Utc>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -74,6 +77,7 @@ struct Commit {
     author_email: String,
     committer_name: String,
     committer_email: String,
+    created_at: DateTime<Utc>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -87,6 +91,8 @@ struct Branch {
 struct Note {
     id: u32,
     author: NoteAuthor,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -150,7 +156,27 @@ impl<'a> Gitlab<'a> {
         ))?;
 
         let approvals = merge_requests.iter()
-            .filter(|mr| !ignore_authors.contains(&mr.author.username))
+            .filter(|mr| {
+                if !ignore_authors.contains(&mr.author.username) {
+                    let url = format!("/api/v4/projects/{:}/merge_requests/{:}/notes?sort=desc&order_by=updated_at&per_page=1", project_id, mr.iid);
+                    let notes: Result<Vec<Note>, _> = self.get(&url);
+                    match notes {
+                        Ok(notes) => {
+                            notes
+                                .get(0)
+                                .filter(|n| !ignore_authors.contains(&n.author.username))
+                                .map(|d| d.updated_at <= mr.updated_at)
+                                .unwrap_or(true)
+                        },
+                        Err(e) => {
+                            println!("error in notes: {:?}", e);
+                            false
+                        }
+                    }
+                } else {
+                    false
+                }
+            })
             .map(|mr| self.get::<MergeRequestApproval>(&format!("/api/v4/projects/{:}/merge_requests/{:}/approvals", project_id, mr.iid)))
             .filter_map(|mra| {
                 match mra {
@@ -162,22 +188,6 @@ impl<'a> Gitlab<'a> {
                 }
             })
             .filter(|mra| mra.approvals_left > 0 && mra.user_can_approve && !mra.user_has_approved)
-            .filter(|mra| {
-                let url = format!("/api/v4/projects/{:}/merge_requests/{:}/notes?sort=desc&order_by=updated_at&per_page=1", project_id, mra.iid);
-                let notes: Result<Vec<Note>, _> = self.get(&url);
-                match notes {
-                    Ok(notes) => {
-                        notes
-                            .get(0)
-                            .map(|n| !ignore_authors.contains(&n.author.username))
-                            .unwrap_or(true)
-                    },
-                    Err(e) => {
-                        println!("error in notes: {:?}", e);
-                        false
-                    }
-                }
-            })
             .count();
 
         Ok(approvals)
