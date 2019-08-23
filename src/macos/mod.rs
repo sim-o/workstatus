@@ -29,13 +29,12 @@ pub struct OSXStatusBar {
 
 impl OSXStatusBar {
     pub fn new(title: &String, tx: Sender<String>) -> OSXStatusBar {
-        let mut bar;
         unsafe {
             let app = FruitApp::new();
             app.set_activation_policy(fruitbasket::ActivationPolicy::Prohibited);
             let status_bar = NSStatusBar::systemStatusBar(nil);
 
-            bar = OSXStatusBar {
+            let mut bar = OSXStatusBar {
                 app,
                 status_bar_item: status_bar.statusItemWithLength_(NSVariableStatusItemLength),
                 menu_bar: NSMenu::new(nil),
@@ -55,8 +54,9 @@ impl OSXStatusBar {
                 let cb = s.get_value(sender);
                 cb(sender, &s.tx);
             }));
+
+            bar
         }
-        bar
     }
 
     pub fn stopper(&self) -> FruitStopper {

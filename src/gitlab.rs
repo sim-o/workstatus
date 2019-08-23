@@ -99,14 +99,12 @@ struct Note {
 struct NoteAuthor {
     id: u32,
     username: String,
-    email: String,
 }
 
 pub struct Gitlab<'a> {
     client: reqwest::Client,
     host: &'a str,
     token: &'a str,
-    project_name: &'a str,
     project: Option<Project>,
 }
 
@@ -116,12 +114,11 @@ pub struct MergeRequestStatus {
 }
 
 impl<'a> Gitlab<'a> {
-    pub fn new(host: &'a str, token: &'a str, project_name: &'a str) -> Gitlab<'a> {
+    pub fn new(host: &'a str, token: &'a str) -> Gitlab<'a> {
         Gitlab {
             client: reqwest::Client::new(),
             host,
             token,
-            project_name,
             project: None,
         }
     }
@@ -164,8 +161,7 @@ impl<'a> Gitlab<'a> {
                         Ok(notes) => {
                             notes
                                 .get(0)
-                                .filter(|n| !ignore_authors.contains(&n.author.username))
-                                .map(|d| d.updated_at <= mr.updated_at)
+                                .map(|n| !ignore_authors.contains(&n.author.username))
                                 .unwrap_or(true)
                         },
                         Err(e) => {
