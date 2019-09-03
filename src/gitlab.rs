@@ -93,7 +93,7 @@ struct Note {
     author: NoteAuthor,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
-    resolved: bool,
+    resolved: Option<bool>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -162,7 +162,7 @@ impl<'a> Gitlab<'a> {
                         Ok(notes) => {
                             notes
                                 .get(0)
-                                .map(|n| !ignore_authors.contains(&n.author.username) && !n.resolved)
+                                .map(|n| !ignore_authors.contains(&n.author.username) && !n.resolved.unwrap_or(false))
                                 .unwrap_or(true)
                         },
                         Err(e) => {
