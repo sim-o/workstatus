@@ -1,9 +1,9 @@
+use std::{thread, time::Duration};
 use std::process::exit;
 use std::sync::mpsc::channel;
 use std::sync::mpsc::Sender;
-use std::{thread, time::Duration};
 
-use crate::config::{read_config, Config};
+use crate::config::{Config, read_config};
 use crate::gitlab::{Gitlab, PipelineStatus};
 use crate::macos::OSXStatusBar;
 
@@ -71,48 +71,67 @@ fn main() {
 }
 
 fn make_title(config: &Config, gl: &mut Gitlab) -> String {
-    let requires_merge = gl
-        .merge_request_count(&config.ignore_users)
-        .map(|i| format!("{:}", i))
-        .unwrap_or("⨳".to_string());
-    let status = gl
-        .pipeline_status("master")
-        .map(status_icon)
-        .unwrap_or_else(|e| {
-            println!("error: {:?}", e);
-            "?"
-        });
-    let merge_requests: String = gl
-        .user_merge_requests(&config.branch_users)
-        .map(|v| {
-            v.iter()
-                .map(|mrs| format!("{:}{:}", mrs.branch, status_icon(mrs.status)))
-                .collect()
+    let projects = &config.project;
+    let title: String = projects
+        .iter()
+        .map(|p| {
+            let requires_merge = gl
+                .merge_request_count(&p.name, &p.ignore_users)
+                .map(|i| format!("{:}", i))
+                .unwrap_or("⨳".to_string());
+
+            let status = gl
+                .pipeline_status(&p.name, "master")
+                .map(status_icon)
+                .unwrap_or_else(|e| {
+                    println!("error: {:?}", e);
+                    "?"
+                });
+
+            let merge_requests: String = gl
+                .user_merge_requests(&p.name, &p.branch_users)
+                .map(|v| {
+                    v.iter()
+                        .map(|mrs| format!("{:}{:}", mrs.branch, status_icon(mrs.status)))
+                        .collect()
+                })
+                .unwrap_or_else(|e| {
+                    println!("error: {:?}", e);
+                    "⨳".to_string()
+                });
+
+            let mut title = String::new();
+            if status != "" || requires_merge != "0" || merge_requests != "" {
+                title.push_str(&p.title);
+                if status != "" {
+                    title.push_str(status);
+                }
+                if requires_merge != "0" {
+                    title.push_str(&*requires_merge);
+                }
+                if merge_requests != "" {
+                    title.push_str(&*merge_requests);
+                }
+            }
+            title
         })
-        .unwrap_or_else(|e| {
-            println!("error: {:?}", e);
-            "⨳".to_string()
-        });
-    let mut title = format!("{:} {:}", config.title, status);
-    if requires_merge != "0" {
-        title.push(' ');
-        title.push_str(&*requires_merge);
+        .collect();
+
+    if title == "" {
+        config.title.to_string()
+    } else {
+        title
     }
-    if merge_requests != "" {
-        title.push(' ');
-        title.push_str(&*merge_requests);
-    }
-    title
 }
 
 fn status_icon(status: PipelineStatus) -> &'static str {
     match status {
         PipelineStatus::Running => "🏃",
         PipelineStatus::Pending => "🕗",
-        PipelineStatus::Success => "👍",
+        PipelineStatus::Success => "",
         PipelineStatus::Failed => "💩",
         PipelineStatus::Canceled => "✋",
         PipelineStatus::Skipped => "⦳",
-        PipelineStatus::Manual => "👉",
+        PipelineStatus::Manual => "",
     }
 }

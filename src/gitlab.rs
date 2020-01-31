@@ -12,11 +12,6 @@ use reqwest::Error;
 
 use crate::gitlab::PipelineStatus::Skipped;
 
-#[derive(Deserialize, Debug, Copy, Clone)]
-struct Project {
-    id: u32,
-}
-
 #[derive(Deserialize, Debug)]
 struct MergeRequest {
     id: u32,
@@ -106,7 +101,6 @@ pub struct Gitlab<'a> {
     client: reqwest::Client,
     host: &'a str,
     token: &'a str,
-    project: Option<Project>,
 }
 
 pub struct MergeRequestStatus {
@@ -120,7 +114,6 @@ impl<'a> Gitlab<'a> {
             client: reqwest::Client::new(),
             host,
             token,
-            project: None,
         }
     }
 
@@ -132,22 +125,8 @@ impl<'a> Gitlab<'a> {
             .json()
     }
 
-    fn get_project_id(&mut self) -> Result<u32, Error> {
-        let project_id = match self.project {
-            Some(project) => project.id,
-            None => {
-                let project_name = utf8_percent_encode("PSX/psx", &NON_ALPHANUMERIC).to_string();
-                let project: Project = self.get(&format!("/api/v4/projects/{:}", project_name))?;
-                let project_id = project.id;
-                self.project = Some(project);
-                project_id
-            }
-        };
-        Ok(project_id)
-    }
-
-    pub fn merge_request_count(&mut self, ignore_authors: &Vec<String>) -> Result<usize, Error> {
-        let project_id = self.get_project_id()?;
+    pub fn merge_request_count(&mut self, project: &str, ignore_authors: &Vec<String>) -> Result<usize, Error> {
+        let project_id = utf8_percent_encode(project, &NON_ALPHANUMERIC).to_owned();
         let merge_requests: Vec<MergeRequest> = self.get(&format!(
             "/api/v4/projects/{:}/merge_requests?state=opened&per_page=100",
             project_id
@@ -190,9 +169,8 @@ impl<'a> Gitlab<'a> {
         Ok(approvals)
     }
 
-    pub fn pipeline_status(&mut self, ref_name: &str) -> Result<PipelineStatus, Error> {
-        let project_id = self.get_project_id()?;
-
+    pub fn pipeline_status(&mut self, project: &str, ref_name: &str) -> Result<PipelineStatus, Error> {
+        let project_id = utf8_percent_encode(project, &NON_ALPHANUMERIC).to_owned();
         let pipelines: Vec<Pipeline> = self.get(&format!(
             "/api/v4/projects/{:}/pipelines?ref={:}&per_page=100",
             project_id, ref_name
@@ -222,12 +200,8 @@ impl<'a> Gitlab<'a> {
         Ok(status)
     }
 
-    pub fn user_merge_requests(
-        &mut self,
-        usernames: &Vec<String>,
-    ) -> Result<Vec<MergeRequestStatus>, Error> {
-        let project_id = self.get_project_id()?;
-
+    pub fn user_merge_requests(&mut self, project: &str, usernames: &Vec<String>) -> Result<Vec<MergeRequestStatus>, Error> {
+        let project_id = utf8_percent_encode(project, &NON_ALPHANUMERIC).to_owned();
         let merge_requests: Vec<MergeRequest> = self.get(&format!(
             "/api/v4/projects/{:}/merge_requests?state=opened&per_page=100",
             project_id

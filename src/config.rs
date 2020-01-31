@@ -11,7 +11,13 @@ pub struct Config {
     pub title: String,
     pub gitlab_url: String,
     pub token: String,
-    pub project_name: String,
+    pub project: Vec<Project>,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct Project {
+    pub title: String,
+    pub name: String,
     pub ignore_users: Vec<String>,
     pub branch_users: Vec<String>,
 }
