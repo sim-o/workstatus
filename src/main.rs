@@ -105,6 +105,8 @@ fn make_title(config: &Config, gl: &mut Gitlab) -> String {
                 title.push_str(&p.title);
                 if status != "" {
                     title.push_str(status);
+                } else {
+                    title.push(' ');
                 }
                 if requires_merge != "0" {
                     title.push_str(&*requires_merge);
