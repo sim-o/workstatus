@@ -113,11 +113,13 @@ fn make_title(config: &Config, gl: &mut Gitlab) -> String {
                 }
                 if merge_requests != "" {
                     title.push_str(&*merge_requests);
+                    title.push(' ');
                 }
             }
             title
         })
-        .collect();
+        .collect()
+        .trim();
 
     if title == "" {
         config.title.to_string()
