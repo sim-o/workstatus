@@ -118,8 +118,9 @@ fn make_title(config: &Config, gl: &mut Gitlab) -> String {
             }
             title
         })
-        .collect()
-        .trim();
+        .collect::<String>()
+        .trim()
+        .to_string();
 
     if title == "" {
         config.title.to_string()
