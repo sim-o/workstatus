@@ -88,12 +88,12 @@ fn make_title(config: &Config, gl: &mut Gitlab) -> String {
                     "?"
                 });
 
-            let merge_requests: String = gl
+            let merge_requests = gl
                 .user_merge_requests(&p.name, &p.branch_users)
                 .map(|v| {
                     v.iter()
-                        .map(|mrs| format!("{:}{:}", mrs.branch, status_icon(mrs.status)))
-                        .collect()
+                        .map(|mrs| format!("{:}{:} ", mrs.branch, status_icon(mrs.status)))
+                        .collect::<String>()
                 })
                 .unwrap_or_else(|e| {
                     println!("error: {:?}", e);
@@ -110,10 +110,10 @@ fn make_title(config: &Config, gl: &mut Gitlab) -> String {
                 }
                 if requires_merge != "0" {
                     title.push_str(&*requires_merge);
+                    title.push(' ');
                 }
                 if merge_requests != "" {
                     title.push_str(&*merge_requests);
-                    title.push(' ');
                 }
             }
             title
